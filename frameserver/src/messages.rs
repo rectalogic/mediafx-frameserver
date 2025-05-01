@@ -1,10 +1,10 @@
 use serde::{Deserialize, Serialize};
 
-use crate::frame::FrameInfo;
+use crate::frames::Frames;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct InitializeClient {
-    frame_info: FrameInfo,
+    frames: Frames,
     shmem_id: String,
 }
 
@@ -18,15 +18,15 @@ pub struct RenderFrame {
 }
 
 impl InitializeClient {
-    pub fn new(frame_info: FrameInfo, shmem_id: String) -> Self {
+    pub fn new(frame_info: Frames, shmem_id: String) -> Self {
         InitializeClient {
-            frame_info,
+            frames: frame_info,
             shmem_id,
         }
     }
 
-    pub fn frame_info(&self) -> &FrameInfo {
-        &self.frame_info
+    pub fn frames(&self) -> &Frames {
+        &self.frames
     }
 
     pub fn shmem_id(&self) -> &str {

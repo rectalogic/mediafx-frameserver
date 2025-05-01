@@ -3,14 +3,14 @@ use std::error::Error;
 use shared_memory::{Shmem, ShmemConf};
 
 use crate::{
-    frame::FrameInfo,
+    frames::Frames,
     messages::{ClientResponse, InitializeClient, RenderFrame},
 };
 
 pub struct FrameClient {
     stdin: std::io::Stdin,
     stdout: std::io::Stdout,
-    frame_info: FrameInfo,
+    frames: Frames,
     shmem: Shmem,
 }
 
@@ -27,12 +27,12 @@ impl FrameClient {
         Ok(FrameClient {
             stdin,
             stdout,
-            frame_info: *initialize_message.frame_info(),
+            frames: *initialize_message.frames(),
             shmem,
         })
     }
 
-    //XXX use typestate so we can't access frames until render is called
+    //XXX use typestate so we can't access frames until render is called - similar in server
     pub fn render(&self) -> Result<(), Box<dyn Error>> {
         let render_message: RenderFrame = serde_cbor::from_reader(&self.stdin)?;
     }

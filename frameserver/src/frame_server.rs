@@ -7,12 +7,12 @@ use std::{
 use shared_memory::{Shmem, ShmemConf};
 
 use crate::{
-    frame::FrameInfo,
+    frames::Frames,
     messages::{ClientResponse, InitializeClient, RenderFrame},
 };
 
 pub struct FrameServer {
-    frame_info: FrameInfo,
+    frames: Frames,
     client: Child,
     client_stdin: ChildStdin,
     client_stdout: ChildStdout,
@@ -20,10 +20,7 @@ pub struct FrameServer {
 }
 
 impl FrameServer {
-    pub fn new<S: AsRef<OsStr>>(
-        client_path: S,
-        frame_info: FrameInfo,
-    ) -> Result<Self, Box<dyn Error>> {
+    pub fn new<S: AsRef<OsStr>>(client_path: S, frames: Frames) -> Result<Self, Box<dyn Error>> {
         let mut client = Command::new(client_path)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
@@ -36,14 +33,14 @@ impl FrameServer {
             .stdout
             .take()
             .ok_or("frame client stdout is not available")?;
-        let shmem = ShmemConf::new().size(frame_info.memory_size()).create()?;
-        let initialize_message = InitializeClient::new(frame_info, shmem.get_os_id().into());
+        let shmem = ShmemConf::new().size(frames.memory_size()).create()?;
+        let initialize_message = InitializeClient::new(frames, shmem.get_os_id().into());
 
         serde_cbor::to_writer(&client_stdin, &initialize_message)?;
         let response: ClientResponse = serde_cbor::from_reader(&mut client_stdout)?;
 
         Ok(FrameServer {
-            frame_info,
+            frames,
             client,
             client_stdin,
             client_stdout,
@@ -52,7 +49,7 @@ impl FrameServer {
     }
 
     pub fn get_frame_mut(&mut self, frame_num: usize) -> Result<&mut [u8], Box<dyn Error>> {
-        let range = self.frame_info.frame_range(frame_num)?;
+        let range = self.frames.frame_range(frame_num)?;
         let mem = unsafe { self.shmem.as_slice_mut() };
         Ok(&mut mem[range])
     }
@@ -61,7 +58,7 @@ impl FrameServer {
         serde_cbor::to_writer(&self.client_stdin, &RenderFrame { time })?;
         let response: ClientResponse = serde_cbor::from_reader(&mut self.client_stdout)?;
         let mem = unsafe { self.shmem.as_slice_mut() };
-        Ok(&mut mem[self.frame_info.frame_range(0)?])
+        Ok(&mut mem[self.frames.rendered_frame_range()])
     }
 }
 
