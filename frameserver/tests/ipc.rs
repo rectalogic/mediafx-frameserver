@@ -31,16 +31,10 @@ fn frame_client() {
 }
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    match args.len() {
-        1 => {
-            frame_server(args[0].as_str());
-        }
-        2 => {
-            frame_client();
-        }
-        _ => {
-            panic!("Invalid arguments");
-        }
+    if env::var("IPC_CLIENT").is_ok() {
+        frame_client();
+    } else {
+        unsafe { env::set_var("IPC_CLIENT", "1") };
+        frame_server(env::args().next().unwrap().as_str());
     }
 }
