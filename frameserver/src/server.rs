@@ -20,7 +20,13 @@ pub struct FrameServer {
 }
 
 impl FrameServer {
-    pub fn new<S: AsRef<OsStr>>(client_path: S, frames: Frames) -> Result<Self, Box<dyn Error>> {
+    pub fn new<S: AsRef<OsStr>>(
+        client_path: S,
+        width: u32,
+        height: u32,
+        count: usize,
+    ) -> Result<Self, Box<dyn Error>> {
+        let frames = Frames::new(width, height, count);
         let mut client = Command::new(client_path)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())

@@ -1,4 +1,4 @@
-mod frame_client;
-mod frame_server;
+pub mod client;
 mod frames;
 mod messages;
+pub mod server;
