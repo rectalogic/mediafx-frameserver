@@ -32,8 +32,38 @@ impl FrameClient {
         })
     }
 
-    //XXX use typestate so we can't access frames until render is called - similar in server
-    pub fn render(&self) -> Result<(), Box<dyn Error>> {
+    pub fn render_prepare(self) -> Result<RenderPrepare, Box<dyn Error>> {
         let render_message: RenderFrame = serde_cbor::from_reader(&self.stdin)?;
+        Ok(RenderPrepare {
+            frame_client: self,
+            time: render_message.time,
+        })
+    }
+}
+
+pub struct RenderPrepare {
+    frame_client: FrameClient,
+    time: f32,
+}
+
+impl RenderPrepare {
+    pub fn time(&self) -> f32 {
+        self.time
+    }
+
+    pub fn get_source_frame(&self, frame_num: usize) -> Result<&[u8], Box<dyn Error>> {
+        let range = self.frame_client.frames.frame_range(frame_num)?;
+        let bytes = unsafe { self.frame_client.shmem.as_slice() };
+        Ok(&bytes[range])
+    }
+
+    pub fn get_rendered_frame_mut(&mut self) -> &mut [u8] {
+        let bytes = unsafe { self.frame_client.shmem.as_slice_mut() };
+        &mut bytes[self.frame_client.frames.rendered_frame_range()]
+    }
+
+    pub fn render(self) -> Result<FrameClient, Box<dyn Error>> {
+        serde_cbor::to_writer(&self.frame_client.stdout, &ClientResponse)?;
+        Ok(self.frame_client)
     }
 }

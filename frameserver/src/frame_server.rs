@@ -48,17 +48,16 @@ impl FrameServer {
         })
     }
 
-    pub fn get_frame_mut(&mut self, frame_num: usize) -> Result<&mut [u8], Box<dyn Error>> {
+    pub fn get_source_frame_mut(&mut self, frame_num: usize) -> Result<&mut [u8], Box<dyn Error>> {
         let range = self.frames.frame_range(frame_num)?;
-        let mem = unsafe { self.shmem.as_slice_mut() };
-        Ok(&mut mem[range])
+        let bytes = unsafe { self.shmem.as_slice_mut() };
+        Ok(&mut bytes[range])
     }
 
-    pub fn render(&mut self, time: f32) -> Result<&mut [u8], Box<dyn Error>> {
+    pub fn render(mut self, time: f32) -> Result<RenderResult, Box<dyn Error>> {
         serde_cbor::to_writer(&self.client_stdin, &RenderFrame { time })?;
         let response: ClientResponse = serde_cbor::from_reader(&mut self.client_stdout)?;
-        let mem = unsafe { self.shmem.as_slice_mut() };
-        Ok(&mut mem[self.frames.rendered_frame_range()])
+        Ok(RenderResult { frame_server: self })
     }
 }
 
@@ -67,5 +66,20 @@ impl Drop for FrameServer {
         // Drop/close stdin
         self.client.stdin.take();
         self.client.wait().ok();
+    }
+}
+
+pub struct RenderResult {
+    frame_server: FrameServer,
+}
+
+impl RenderResult {
+    pub fn get_rendered_frame(&mut self) -> &mut [u8] {
+        let bytes = unsafe { self.frame_server.shmem.as_slice_mut() };
+        &mut bytes[self.frame_server.frames.rendered_frame_range()]
+    }
+
+    pub fn prepare_render(self) -> FrameServer {
+        self.frame_server
     }
 }
