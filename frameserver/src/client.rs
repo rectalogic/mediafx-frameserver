@@ -57,12 +57,24 @@ impl RenderPrepare {
         Ok(&bytes[range])
     }
 
+    pub fn render(self) -> RenderResult {
+        RenderResult {
+            frame_client: self.frame_client,
+        }
+    }
+}
+
+pub struct RenderResult {
+    frame_client: FrameClient,
+}
+
+impl RenderResult {
     pub fn get_rendered_frame_mut(&mut self) -> &mut [u8] {
         let bytes = unsafe { self.frame_client.shmem.as_slice_mut() };
         &mut bytes[self.frame_client.frames.rendered_frame_range()]
     }
 
-    pub fn render(self) -> Result<FrameClient, Box<dyn Error>> {
+    pub fn finish(self) -> Result<FrameClient, Box<dyn Error>> {
         serde_cbor::to_writer(&self.frame_client.stdout, &ClientResponse)?;
         Ok(self.frame_client)
     }

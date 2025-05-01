@@ -85,7 +85,7 @@ impl RenderResult {
         &mut bytes[self.frame_server.frames.rendered_frame_range()]
     }
 
-    pub fn prepare_render(self) -> FrameServer {
+    pub fn finish(self) -> FrameServer {
         self.frame_server
     }
 }
