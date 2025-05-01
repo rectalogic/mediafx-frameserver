@@ -1,4 +1,4 @@
-use std::error::Error;
+use std::{error::Error, io::Write};
 
 use shared_memory::{Shmem, ShmemConf};
 
@@ -17,12 +17,13 @@ pub struct FrameClient {
 impl FrameClient {
     pub fn new() -> Result<Self, Box<dyn Error>> {
         let stdin = std::io::stdin();
-        let stdout = std::io::stdout();
-        let initialize_message: InitializeClient = serde_cbor::from_reader(&stdin)?;
+        let mut stdout = std::io::stdout();
+        let initialize_message: InitializeClient = ciborium::from_reader(&stdin)?;
         let shmem = ShmemConf::new()
             .os_id(initialize_message.shmem_id())
             .open()?;
-        serde_cbor::to_writer(&stdout, &ClientResponse)?;
+        ciborium::into_writer(&ClientResponse, &stdout)?;
+        stdout.flush()?;
 
         Ok(FrameClient {
             stdin,
@@ -33,7 +34,7 @@ impl FrameClient {
     }
 
     pub fn render_prepare(self) -> Result<RenderPrepare, Box<dyn Error>> {
-        let render_message: RenderFrame = serde_cbor::from_reader(&self.stdin)?;
+        let render_message: RenderFrame = ciborium::from_reader(&self.stdin)?;
         Ok(RenderPrepare {
             frame_client: self,
             time: render_message.time,
@@ -74,8 +75,9 @@ impl RenderResult {
         &mut bytes[self.frame_client.frames.rendered_frame_range()]
     }
 
-    pub fn finish(self) -> Result<FrameClient, Box<dyn Error>> {
-        serde_cbor::to_writer(&self.frame_client.stdout, &ClientResponse)?;
+    pub fn finish(mut self) -> Result<FrameClient, Box<dyn Error>> {
+        ciborium::into_writer(&ClientResponse, &self.frame_client.stdout)?;
+        self.frame_client.stdout.flush()?;
         Ok(self.frame_client)
     }
 }

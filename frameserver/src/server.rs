@@ -1,6 +1,7 @@
 use std::{
     error::Error,
     ffi::OsStr,
+    io::Write,
     process::{Child, ChildStdin, ChildStdout, Command, Stdio},
 };
 
@@ -31,7 +32,7 @@ impl FrameServer {
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .spawn()?;
-        let client_stdin = client
+        let mut client_stdin = client
             .stdin
             .take()
             .ok_or("frame client stdin is not available")?;
@@ -42,8 +43,9 @@ impl FrameServer {
         let shmem = ShmemConf::new().size(frames.memory_size()).create()?;
         let initialize_message = InitializeClient::new(frames, shmem.get_os_id().into());
 
-        serde_cbor::to_writer(&client_stdin, &initialize_message)?;
-        let response: ClientResponse = serde_cbor::from_reader(&mut client_stdout)?;
+        ciborium::into_writer(&initialize_message, &client_stdin)?;
+        client_stdin.flush()?;
+        let response: ClientResponse = ciborium::from_reader(&mut client_stdout)?;
 
         Ok(FrameServer {
             frames,
@@ -61,8 +63,9 @@ impl FrameServer {
     }
 
     pub fn render(mut self, time: f32) -> Result<RenderResult, Box<dyn Error>> {
-        serde_cbor::to_writer(&self.client_stdin, &RenderFrame { time })?;
-        let response: ClientResponse = serde_cbor::from_reader(&mut self.client_stdout)?;
+        ciborium::into_writer(&RenderFrame { time }, &self.client_stdin)?;
+        self.client_stdin.flush()?;
+        let response: ClientResponse = ciborium::from_reader(&mut self.client_stdout)?;
         Ok(RenderResult { frame_server: self })
     }
 }
