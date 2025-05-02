@@ -1,9 +1,9 @@
-use serde::{Deserialize, Serialize};
+use bincode::{Decode, Encode};
 use std::{error::Error, ops::Range};
 
 const BYTES_PER_PIXEL: usize = 4;
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Encode, Decode)]
 pub(crate) struct Frames {
     width: u32,
     height: u32,

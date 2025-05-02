@@ -5,13 +5,15 @@ fn fill_frame(frame: &mut [u8], value: u8) {
     frame.fill(value);
 }
 
+//XXX loop, do 10 frames
 fn frame_server(client_path: &str) {
     let mut frame_server = server::FrameServer::new(client_path, 1024, 768, 2).unwrap();
     fill_frame(frame_server.get_source_frame_mut(0).unwrap(), 1);
     fill_frame(frame_server.get_source_frame_mut(1).unwrap(), 2);
     let mut result = frame_server.render(0.0).unwrap();
-    let expected = vec![3; 1024 * 768 * 4];
-    assert_eq!(result.get_rendered_frame(), &expected);
+    let expected_frame = vec![3; 1024 * 768 * 4];
+    let rendered_frame = result.get_rendered_frame();
+    assert_eq!(rendered_frame, &expected_frame);
     result.finish();
 }
 

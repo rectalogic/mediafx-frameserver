@@ -43,10 +43,14 @@ impl FrameServer {
         let shmem = ShmemConf::new().size(frames.memory_size()).create()?;
         let initialize_message = InitializeClient::new(frames, shmem.get_os_id().into());
 
-        ciborium::into_writer(&initialize_message, &client_stdin)?;
+        bincode::encode_into_std_write(
+            &initialize_message,
+            &mut client_stdin,
+            bincode::config::standard(),
+        )?;
         client_stdin.flush()?;
-        let response: ClientResponse = ciborium::from_reader(&mut client_stdout)?;
-
+        let response: ClientResponse =
+            bincode::decode_from_std_read(&mut client_stdout, bincode::config::standard())?;
         Ok(FrameServer {
             frames,
             client,
@@ -63,9 +67,14 @@ impl FrameServer {
     }
 
     pub fn render(mut self, time: f32) -> Result<RenderResult, Box<dyn Error>> {
-        ciborium::into_writer(&RenderFrame { time }, &self.client_stdin)?;
+        bincode::encode_into_std_write(
+            &RenderFrame { time },
+            &mut self.client_stdin,
+            bincode::config::standard(),
+        )?;
         self.client_stdin.flush()?;
-        let response: ClientResponse = ciborium::from_reader(&mut self.client_stdout)?;
+        let response: ClientResponse =
+            bincode::decode_from_std_read(&mut self.client_stdout, bincode::config::standard())?;
         Ok(RenderResult { frame_server: self })
     }
 }

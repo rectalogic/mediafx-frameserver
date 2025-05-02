@@ -1,18 +1,19 @@
-use serde::{Deserialize, Serialize};
+use bincode::{Decode, Encode};
 
 use crate::frames::Frames;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Encode, Decode, Debug)]
 pub struct InitializeClient {
     frames: Frames,
     shmem_id: String,
 }
 
-//XXX add optional error message?
-#[derive(Serialize, Deserialize, Debug)]
-pub struct ClientResponse;
+#[derive(Encode, Decode, Debug, Default)]
+pub struct ClientResponse {
+    error: Option<String>,
+}
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Encode, Decode, Debug)]
 pub struct RenderFrame {
     pub time: f32,
 }

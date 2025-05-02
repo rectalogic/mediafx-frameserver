@@ -16,13 +16,18 @@ pub struct FrameClient {
 
 impl FrameClient {
     pub fn new() -> Result<Self, Box<dyn Error>> {
-        let stdin = std::io::stdin();
+        let mut stdin = std::io::stdin();
         let mut stdout = std::io::stdout();
-        let initialize_message: InitializeClient = ciborium::from_reader(&stdin)?;
+        let initialize_message: InitializeClient =
+            bincode::decode_from_std_read(&mut stdin, bincode::config::standard())?;
         let shmem = ShmemConf::new()
             .os_id(initialize_message.shmem_id())
             .open()?;
-        ciborium::into_writer(&ClientResponse, &stdout)?;
+        bincode::encode_into_std_write(
+            ClientResponse::default(),
+            &mut stdout,
+            bincode::config::standard(),
+        )?;
         stdout.flush()?;
 
         Ok(FrameClient {
@@ -33,8 +38,9 @@ impl FrameClient {
         })
     }
 
-    pub fn render_prepare(self) -> Result<RenderPrepare, Box<dyn Error>> {
-        let render_message: RenderFrame = ciborium::from_reader(&self.stdin)?;
+    pub fn render_prepare(mut self) -> Result<RenderPrepare, Box<dyn Error>> {
+        let render_message: RenderFrame =
+            bincode::decode_from_std_read(&mut self.stdin, bincode::config::standard())?;
         Ok(RenderPrepare {
             frame_client: self,
             time: render_message.time,
@@ -76,7 +82,11 @@ impl RenderResult {
     }
 
     pub fn finish(mut self) -> Result<FrameClient, Box<dyn Error>> {
-        ciborium::into_writer(&ClientResponse, &self.frame_client.stdout)?;
+        bincode::encode_into_std_write(
+            ClientResponse::default(),
+            &mut self.frame_client.stdout,
+            bincode::config::standard(),
+        )?;
         self.frame_client.stdout.flush()?;
         Ok(self.frame_client)
     }
