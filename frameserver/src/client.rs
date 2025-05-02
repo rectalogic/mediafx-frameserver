@@ -3,14 +3,14 @@ use std::{error::Error, io::Write};
 use shared_memory::{Shmem, ShmemConf};
 
 use crate::{
-    frames::Frames,
+    context::RenderContext,
     messages::{ClientResponse, InitializeClient, RenderFrame, receive_message, send_message},
 };
 
 pub struct FrameClient {
     stdin: std::io::Stdin,
     stdout: std::io::Stdout,
-    frames: Frames,
+    context: RenderContext,
     shmem: Shmem,
 }
 
@@ -28,7 +28,7 @@ impl FrameClient {
         Ok(FrameClient {
             stdin,
             stdout,
-            frames: *initialize_message.frames(),
+            context: *initialize_message.context(),
             shmem,
         })
     }
@@ -53,7 +53,7 @@ impl RenderPrepare {
     }
 
     pub fn get_source_frame(&self, frame_num: usize) -> Result<&[u8], Box<dyn Error>> {
-        let range = self.frame_client.frames.frame_range(frame_num)?;
+        let range = self.frame_client.context.frame_range(frame_num)?;
         let bytes = unsafe { self.frame_client.shmem.as_slice() };
         Ok(&bytes[range])
     }
@@ -72,7 +72,7 @@ pub struct RenderResult {
 impl RenderResult {
     pub fn get_rendered_frame_mut(&mut self) -> &mut [u8] {
         let bytes = unsafe { self.frame_client.shmem.as_slice_mut() };
-        &mut bytes[self.frame_client.frames.rendered_frame_range()]
+        &mut bytes[self.frame_client.context.rendered_frame_range()]
     }
 
     pub fn finish(mut self) -> Result<FrameClient, Box<dyn Error>> {

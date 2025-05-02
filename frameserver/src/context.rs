@@ -4,16 +4,16 @@ use std::{error::Error, ops::Range};
 const BYTES_PER_PIXEL: usize = 4;
 
 #[derive(Debug, Clone, Copy, Encode, Decode)]
-pub(crate) struct Frames {
+pub(crate) struct RenderContext {
     width: u32,
     height: u32,
     /// Number of source frame images, does not count the rendered frame
     count: usize,
 }
 
-impl Frames {
+impl RenderContext {
     pub fn new(width: u32, height: u32, count: usize) -> Self {
-        Frames {
+        RenderContext {
             width,
             height,
             count,

@@ -8,12 +8,12 @@ use std::{
 use shared_memory::{Shmem, ShmemConf};
 
 use crate::{
-    frames::Frames,
+    context::RenderContext,
     messages::{ClientResponse, InitializeClient, RenderFrame, receive_message, send_message},
 };
 
 pub struct FrameServer {
-    frames: Frames,
+    context: RenderContext,
     client: Child,
     client_stdin: ChildStdin,
     client_stdout: ChildStdout,
@@ -27,7 +27,7 @@ impl FrameServer {
         height: u32,
         count: usize,
     ) -> Result<Self, Box<dyn Error>> {
-        let frames = Frames::new(width, height, count);
+        let context = RenderContext::new(width, height, count);
         let mut client = Command::new(client_path)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
@@ -40,14 +40,14 @@ impl FrameServer {
             .stdout
             .take()
             .ok_or("frame client stdout is not available")?;
-        let shmem = ShmemConf::new().size(frames.memory_size()).create()?;
-        let initialize_message = InitializeClient::new(frames, shmem.get_os_id().into());
+        let shmem = ShmemConf::new().size(context.memory_size()).create()?;
+        let initialize_message = InitializeClient::new(context, shmem.get_os_id().into());
 
         send_message(&initialize_message, &mut client_stdin)?;
         client_stdin.flush()?;
         let response: ClientResponse = receive_message(&mut client_stdout)?;
         Ok(FrameServer {
-            frames,
+            context,
             client,
             client_stdin,
             client_stdout,
@@ -56,7 +56,7 @@ impl FrameServer {
     }
 
     pub fn get_source_frame_mut(&mut self, frame_num: usize) -> Result<&mut [u8], Box<dyn Error>> {
-        let range = self.frames.frame_range(frame_num)?;
+        let range = self.context.frame_range(frame_num)?;
         let bytes = unsafe { self.shmem.as_slice_mut() };
         Ok(&mut bytes[range])
     }
@@ -84,7 +84,7 @@ pub struct RenderResult {
 impl RenderResult {
     pub fn get_rendered_frame(&mut self) -> &mut [u8] {
         let bytes = unsafe { self.frame_server.shmem.as_slice_mut() };
-        &mut bytes[self.frame_server.frames.rendered_frame_range()]
+        &mut bytes[self.frame_server.context.rendered_frame_range()]
     }
 
     pub fn finish(self) -> FrameServer {
