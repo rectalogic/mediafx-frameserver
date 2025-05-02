@@ -4,7 +4,7 @@ use shared_memory::{Shmem, ShmemConf};
 
 use crate::{
     frames::Frames,
-    messages::{ClientResponse, InitializeClient, RenderFrame},
+    messages::{ClientResponse, InitializeClient, RenderFrame, receive_message, send_message},
 };
 
 pub struct FrameClient {
@@ -18,16 +18,11 @@ impl FrameClient {
     pub fn new() -> Result<Self, Box<dyn Error>> {
         let mut stdin = std::io::stdin();
         let mut stdout = std::io::stdout();
-        let initialize_message: InitializeClient =
-            bincode::decode_from_std_read(&mut stdin, bincode::config::standard())?;
+        let initialize_message: InitializeClient = receive_message(&mut stdin)?;
         let shmem = ShmemConf::new()
             .os_id(initialize_message.shmem_id())
             .open()?;
-        bincode::encode_into_std_write(
-            ClientResponse::default(),
-            &mut stdout,
-            bincode::config::standard(),
-        )?;
+        send_message(ClientResponse::default(), &mut stdout)?;
         stdout.flush()?;
 
         Ok(FrameClient {
@@ -39,8 +34,7 @@ impl FrameClient {
     }
 
     pub fn render_prepare(mut self) -> Result<RenderPrepare, Box<dyn Error>> {
-        let render_message: RenderFrame =
-            bincode::decode_from_std_read(&mut self.stdin, bincode::config::standard())?;
+        let render_message: RenderFrame = receive_message(&mut self.stdin)?;
         Ok(RenderPrepare {
             frame_client: self,
             time: render_message.time,
@@ -82,11 +76,7 @@ impl RenderResult {
     }
 
     pub fn finish(mut self) -> Result<FrameClient, Box<dyn Error>> {
-        bincode::encode_into_std_write(
-            ClientResponse::default(),
-            &mut self.frame_client.stdout,
-            bincode::config::standard(),
-        )?;
+        send_message(ClientResponse::default(), &mut self.frame_client.stdout)?;
         self.frame_client.stdout.flush()?;
         Ok(self.frame_client)
     }
