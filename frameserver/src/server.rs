@@ -56,10 +56,10 @@ impl FrameServer {
         self.context.frame_mut(frame_num)
     }
 
-    pub fn render(mut self, time: f32) -> Result<RenderResult, Box<dyn Error>> {
+    pub fn render(&mut self, time: f32) -> Result<&mut [u8], Box<dyn Error>> {
         send_message(RenderFrame::Render(time), &mut self.client_stdin)?;
         let response: RenderAck = receive_message(&mut self.client_stdout)?;
-        Ok(RenderResult { frame_server: self })
+        Ok(self.context.rendered_frame_mut())
     }
 }
 
@@ -70,19 +70,5 @@ impl Drop for FrameServer {
         } else {
             let _ = self.client.wait();
         }
-    }
-}
-
-pub struct RenderResult {
-    frame_server: FrameServer,
-}
-
-impl RenderResult {
-    pub fn get_rendered_frame(&mut self) -> &mut [u8] {
-        self.frame_server.context.rendered_frame_mut()
-    }
-
-    pub fn finish(self) -> FrameServer {
-        self.frame_server
     }
 }

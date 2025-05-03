@@ -8,20 +8,18 @@ fn fill_frame(frame: &mut [u8], value: u8) {
     frame.fill(value);
 }
 
-fn server_render_frame(mut frame_server: server::FrameServer, num: u8) -> server::FrameServer {
+fn server_render_frame(frame_server: &mut server::FrameServer, num: u8) {
     fill_frame(frame_server.get_source_frame_mut(0).unwrap(), num);
     fill_frame(frame_server.get_source_frame_mut(1).unwrap(), num + 1);
-    let mut result = frame_server.render(0.0).unwrap();
+    let rendered_frame = frame_server.render(0.0).unwrap();
     let expected_frame = vec![num + num + 1; (WIDTH * HEIGHT * 4) as usize];
-    let rendered_frame = result.get_rendered_frame();
     assert_eq!(rendered_frame, &expected_frame);
-    result.finish()
 }
 
 fn frame_server(client_path: &str) {
     let mut frame_server = server::FrameServer::new(client_path, WIDTH, HEIGHT, 2).unwrap();
     for num in 1..10 {
-        frame_server = server_render_frame(frame_server, num);
+        server_render_frame(&mut frame_server, num);
     }
 }
 
