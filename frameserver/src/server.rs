@@ -11,6 +11,8 @@ use crate::{
     messages::{RenderAck, RenderFrame, RenderInitialize, receive_message, send_message},
 };
 
+pub mod bindings;
+
 pub struct FrameServer {
     context: RenderContext,
     client: Child,

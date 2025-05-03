@@ -7,6 +7,11 @@ edition = "2024"
 bincode = "2.0.1"
 shared_memory = "0.12.4"
 
+[build-dependencies]
+cbindgen = "0.28.0"
+
+[lib]
+crate-type = ["rlib", "staticlib"]
 
 [[test]]
 name = "ipc"
