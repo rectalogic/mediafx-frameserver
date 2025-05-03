@@ -5,11 +5,11 @@ use std::{
 
 use bincode::{Decode, Encode};
 
-use crate::context::RenderContext;
+use crate::context::RenderSize;
 
 #[derive(Encode, Decode, Debug)]
 pub struct InitializeClient {
-    context: RenderContext,
+    size: RenderSize,
     shmem_id: String,
 }
 
@@ -24,15 +24,12 @@ pub struct RenderFrame {
 }
 
 impl InitializeClient {
-    pub fn new(frame_info: RenderContext, shmem_id: String) -> Self {
-        InitializeClient {
-            context: frame_info,
-            shmem_id,
-        }
+    pub fn new(size: RenderSize, shmem_id: String) -> Self {
+        InitializeClient { size, shmem_id }
     }
 
-    pub fn context(&self) -> &RenderContext {
-        &self.context
+    pub fn size(&self) -> &RenderSize {
+        &self.size
     }
 
     pub fn shmem_id(&self) -> &str {

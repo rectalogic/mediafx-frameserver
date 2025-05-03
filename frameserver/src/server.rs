@@ -5,10 +5,10 @@ use std::{
     process::{Child, ChildStdin, ChildStdout, Command, Stdio},
 };
 
-use shared_memory::{Shmem, ShmemConf};
+use shared_memory::ShmemConf;
 
 use crate::{
-    context::RenderContext,
+    context::{RenderContext, RenderSize},
     messages::{ClientResponse, InitializeClient, RenderFrame, receive_message, send_message},
 };
 
@@ -17,7 +17,6 @@ pub struct FrameServer {
     client: Child,
     client_stdin: ChildStdin,
     client_stdout: ChildStdout,
-    shmem: Shmem,
 }
 
 impl FrameServer {
@@ -27,7 +26,7 @@ impl FrameServer {
         height: u32,
         count: usize,
     ) -> Result<Self, Box<dyn Error>> {
-        let context = RenderContext::new(width, height, count);
+        let size = RenderSize::new(width, height, count);
         let mut client = Command::new(client_path)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
@@ -40,8 +39,9 @@ impl FrameServer {
             .stdout
             .take()
             .ok_or("frame client stdout is not available")?;
-        let shmem = ShmemConf::new().size(context.memory_size()).create()?;
-        let initialize_message = InitializeClient::new(context, shmem.get_os_id().into());
+        let shmem = ShmemConf::new().size(size.memory_size()).create()?;
+        let initialize_message = InitializeClient::new(size, shmem.get_os_id().into());
+        let context = RenderContext::new(size, shmem);
 
         send_message(&initialize_message, &mut client_stdin)?;
         client_stdin.flush()?;
@@ -51,14 +51,11 @@ impl FrameServer {
             client,
             client_stdin,
             client_stdout,
-            shmem,
         })
     }
 
     pub fn get_source_frame_mut(&mut self, frame_num: usize) -> Result<&mut [u8], Box<dyn Error>> {
-        let range = self.context.frame_range(frame_num)?;
-        let bytes = unsafe { self.shmem.as_slice_mut() };
-        Ok(&mut bytes[range])
+        self.context.frame_mut(frame_num)
     }
 
     pub fn render(mut self, time: f32) -> Result<RenderResult, Box<dyn Error>> {
@@ -83,8 +80,7 @@ pub struct RenderResult {
 
 impl RenderResult {
     pub fn get_rendered_frame(&mut self) -> &mut [u8] {
-        let bytes = unsafe { self.frame_server.shmem.as_slice_mut() };
-        &mut bytes[self.frame_server.context.rendered_frame_range()]
+        self.frame_server.context.rendered_frame_mut()
     }
 
     pub fn finish(self) -> FrameServer {
