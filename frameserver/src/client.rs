@@ -1,4 +1,4 @@
-use std::{error::Error, io::Write};
+use std::error::Error;
 
 use shared_memory::ShmemConf;
 
@@ -22,7 +22,6 @@ impl FrameClient {
             .os_id(initialize_message.shmem_id())
             .open()?;
         send_message(ClientResponse::default(), &mut stdout)?;
-        stdout.flush()?;
         let context = RenderContext::new(*initialize_message.size(), shmem);
 
         Ok(FrameClient {
@@ -34,9 +33,12 @@ impl FrameClient {
 
     pub fn render_prepare(mut self) -> Result<RenderPrepare, Box<dyn Error>> {
         let render_message: RenderFrame = receive_message(&mut self.stdin)?;
+        if render_message.is_terminate() {
+            std::process::exit(0);
+        }
         Ok(RenderPrepare {
             frame_client: self,
-            time: render_message.time,
+            time: render_message.time(),
         })
     }
 }
@@ -73,7 +75,6 @@ impl RenderResult {
 
     pub fn finish(mut self) -> Result<FrameClient, Box<dyn Error>> {
         send_message(ClientResponse::default(), &mut self.frame_client.stdout)?;
-        self.frame_client.stdout.flush()?;
         Ok(self.frame_client)
     }
 }

@@ -20,7 +20,29 @@ pub struct ClientResponse {
 
 #[derive(Encode, Decode, Debug)]
 pub struct RenderFrame {
-    pub time: f32,
+    time: f32,
+    terminate: bool,
+}
+
+impl RenderFrame {
+    pub fn new_render(time: f32) -> Self {
+        RenderFrame {
+            time,
+            terminate: false,
+        }
+    }
+    pub fn new_terminate() -> Self {
+        RenderFrame {
+            time: 0.0,
+            terminate: true,
+        }
+    }
+    pub fn time(&self) -> f32 {
+        self.time
+    }
+    pub fn is_terminate(&self) -> bool {
+        self.terminate
+    }
 }
 
 impl InitializeClient {

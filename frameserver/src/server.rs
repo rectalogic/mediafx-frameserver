@@ -1,7 +1,6 @@
 use std::{
     error::Error,
     ffi::OsStr,
-    io::Write,
     process::{Child, ChildStdin, ChildStdout, Command, Stdio},
 };
 
@@ -44,7 +43,6 @@ impl FrameServer {
         let context = RenderContext::new(size, shmem);
 
         send_message(&initialize_message, &mut client_stdin)?;
-        client_stdin.flush()?;
         let response: ClientResponse = receive_message(&mut client_stdout)?;
         Ok(FrameServer {
             context,
@@ -59,8 +57,7 @@ impl FrameServer {
     }
 
     pub fn render(mut self, time: f32) -> Result<RenderResult, Box<dyn Error>> {
-        send_message(&RenderFrame { time }, &mut self.client_stdin)?;
-        self.client_stdin.flush()?;
+        send_message(RenderFrame::new_render(time), &mut self.client_stdin)?;
         let response: ClientResponse = receive_message(&mut self.client_stdout)?;
         Ok(RenderResult { frame_server: self })
     }
@@ -68,9 +65,11 @@ impl FrameServer {
 
 impl Drop for FrameServer {
     fn drop(&mut self) {
-        // Drop/close stdin
-        self.client.stdin.take();
-        self.client.wait().ok();
+        if send_message(RenderFrame::new_terminate(), &mut self.client_stdin).is_err() {
+            let _ = self.client.kill();
+        } else {
+            let _ = self.client.wait();
+        }
     }
 }
 
