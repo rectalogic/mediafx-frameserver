@@ -57,23 +57,11 @@ impl RenderRequest {
         self.frame_client.context.frame(frame_num)
     }
 
-    pub fn render(self) -> RenderResult {
-        RenderResult {
-            frame_client: self.frame_client,
-        }
-    }
-}
-
-pub struct RenderResult {
-    frame_client: FrameClient,
-}
-
-impl RenderResult {
     pub fn get_rendered_frame_mut(&mut self) -> &mut [u8] {
         self.frame_client.context.rendered_frame_mut()
     }
 
-    pub fn finish(mut self) -> Result<FrameClient, Box<dyn Error>> {
+    pub fn render_complete(mut self) -> Result<FrameClient, Box<dyn Error>> {
         send_message(RenderAck::default(), &mut self.frame_client.stdout)?;
         Ok(self.frame_client)
     }

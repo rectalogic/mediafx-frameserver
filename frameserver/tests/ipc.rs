@@ -26,18 +26,17 @@ fn frame_server(client_path: &str) {
 }
 
 fn client_render_frame(frame_client: client::FrameClient) -> client::FrameClient {
-    eprintln!("client prepare");
-    let prepare = frame_client.request_render().unwrap();
-    let frame0 = prepare.get_source_frame(0).unwrap();
-    let frame1 = prepare.get_source_frame(1).unwrap();
+    let mut request = frame_client.request_render().unwrap();
+    let frame0 = request.get_source_frame(0).unwrap();
+    let frame1 = request.get_source_frame(1).unwrap();
     let rendered_frame = zip(frame0, frame1)
         .map(|(frame1, frame2)| frame1 + frame2)
         .collect::<Vec<u8>>();
-    let mut render = prepare.render();
-    render
+
+    request
         .get_rendered_frame_mut()
         .copy_from_slice(&rendered_frame);
-    render.finish().unwrap()
+    request.render_complete().unwrap()
 }
 
 fn frame_client() {
