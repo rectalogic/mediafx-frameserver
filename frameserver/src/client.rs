@@ -4,7 +4,7 @@ use shared_memory::ShmemConf;
 
 use crate::{
     context::RenderContext,
-    messages::{ClientResponse, InitializeClient, RenderFrame, receive_message, send_message},
+    messages::{RenderAck, RenderFrame, RenderInitialize, receive_message, send_message},
 };
 
 pub struct FrameClient {
@@ -17,12 +17,12 @@ impl FrameClient {
     pub fn new() -> Result<Self, Box<dyn Error>> {
         let mut stdin = std::io::stdin();
         let mut stdout = std::io::stdout();
-        let initialize_message: InitializeClient = receive_message(&mut stdin)?;
+        let render_initialize: RenderInitialize = receive_message(&mut stdin)?;
         let shmem = ShmemConf::new()
-            .os_id(initialize_message.shmem_id())
+            .os_id(render_initialize.shmem_id())
             .open()?;
-        send_message(ClientResponse::default(), &mut stdout)?;
-        let context = RenderContext::new(*initialize_message.size(), shmem);
+        send_message(RenderAck::default(), &mut stdout)?;
+        let context = RenderContext::new(*render_initialize.size(), shmem);
 
         Ok(FrameClient {
             stdin,
@@ -31,11 +31,11 @@ impl FrameClient {
         })
     }
 
-    pub fn render_prepare(mut self) -> Result<RenderPrepare, Box<dyn Error>> {
+    pub fn request_render(mut self) -> Result<RenderRequest, Box<dyn Error>> {
         let render_message: RenderFrame = receive_message(&mut self.stdin)?;
         match render_message {
             RenderFrame::Terminate => std::process::exit(0),
-            RenderFrame::Render(time) => Ok(RenderPrepare {
+            RenderFrame::Render(time) => Ok(RenderRequest {
                 frame_client: self,
                 time,
             }),
@@ -43,12 +43,12 @@ impl FrameClient {
     }
 }
 
-pub struct RenderPrepare {
+pub struct RenderRequest {
     frame_client: FrameClient,
     time: f32,
 }
 
-impl RenderPrepare {
+impl RenderRequest {
     pub fn time(&self) -> f32 {
         self.time
     }
@@ -74,7 +74,7 @@ impl RenderResult {
     }
 
     pub fn finish(mut self) -> Result<FrameClient, Box<dyn Error>> {
-        send_message(ClientResponse::default(), &mut self.frame_client.stdout)?;
+        send_message(RenderAck::default(), &mut self.frame_client.stdout)?;
         Ok(self.frame_client)
     }
 }

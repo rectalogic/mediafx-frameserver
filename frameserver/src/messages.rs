@@ -8,13 +8,13 @@ use bincode::{Decode, Encode};
 use crate::context::RenderSize;
 
 #[derive(Encode, Decode, Debug)]
-pub struct InitializeClient {
+pub struct RenderInitialize {
     size: RenderSize,
     shmem_id: String,
 }
 
 #[derive(Encode, Decode, Debug, Default)]
-pub struct ClientResponse {
+pub struct RenderAck {
     error: Option<String>,
 }
 
@@ -24,9 +24,9 @@ pub enum RenderFrame {
     Terminate,
 }
 
-impl InitializeClient {
+impl RenderInitialize {
     pub fn new(size: RenderSize, shmem_id: String) -> Self {
-        InitializeClient { size, shmem_id }
+        RenderInitialize { size, shmem_id }
     }
 
     pub fn size(&self) -> &RenderSize {
@@ -38,13 +38,13 @@ impl InitializeClient {
     }
 }
 
-const CONFIG: bincode::config::Configuration = bincode::config::standard();
+const BINCODE_CONFIG: bincode::config::Configuration = bincode::config::standard();
 
 pub(crate) fn send_message<E: Encode, W: Write>(
     message: E,
     writer: &mut W,
 ) -> Result<usize, Box<dyn Error>> {
-    let result = bincode::encode_into_std_write(message, writer, CONFIG)?;
+    let result = bincode::encode_into_std_write(message, writer, BINCODE_CONFIG)?;
     writer.flush()?;
     Ok(result)
 }
@@ -52,5 +52,5 @@ pub(crate) fn send_message<E: Encode, W: Write>(
 pub(crate) fn receive_message<D: Decode<()>, R: Read>(
     reader: &mut R,
 ) -> Result<D, bincode::error::DecodeError> {
-    bincode::decode_from_std_read(reader, CONFIG)
+    bincode::decode_from_std_read(reader, BINCODE_CONFIG)
 }

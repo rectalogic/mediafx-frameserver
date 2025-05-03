@@ -8,7 +8,7 @@ use shared_memory::ShmemConf;
 
 use crate::{
     context::{RenderContext, RenderSize},
-    messages::{ClientResponse, InitializeClient, RenderFrame, receive_message, send_message},
+    messages::{RenderAck, RenderFrame, RenderInitialize, receive_message, send_message},
 };
 
 pub struct FrameServer {
@@ -39,11 +39,11 @@ impl FrameServer {
             .take()
             .ok_or("frame client stdout is not available")?;
         let shmem = ShmemConf::new().size(size.memory_size()).create()?;
-        let initialize_message = InitializeClient::new(size, shmem.get_os_id().into());
+        let render_initialize = RenderInitialize::new(size, shmem.get_os_id().into());
         let context = RenderContext::new(size, shmem);
 
-        send_message(&initialize_message, &mut client_stdin)?;
-        let response: ClientResponse = receive_message(&mut client_stdout)?;
+        send_message(&render_initialize, &mut client_stdin)?;
+        let response: RenderAck = receive_message(&mut client_stdout)?;
         Ok(FrameServer {
             context,
             client,
@@ -58,7 +58,7 @@ impl FrameServer {
 
     pub fn render(mut self, time: f32) -> Result<RenderResult, Box<dyn Error>> {
         send_message(RenderFrame::Render(time), &mut self.client_stdin)?;
-        let response: ClientResponse = receive_message(&mut self.client_stdout)?;
+        let response: RenderAck = receive_message(&mut self.client_stdout)?;
         Ok(RenderResult { frame_server: self })
     }
 }

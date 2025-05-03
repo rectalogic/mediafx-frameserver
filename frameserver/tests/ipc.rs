@@ -27,7 +27,7 @@ fn frame_server(client_path: &str) {
 
 fn client_render_frame(frame_client: client::FrameClient) -> client::FrameClient {
     eprintln!("client prepare");
-    let prepare = frame_client.render_prepare().unwrap();
+    let prepare = frame_client.request_render().unwrap();
     let frame0 = prepare.get_source_frame(0).unwrap();
     let frame1 = prepare.get_source_frame(1).unwrap();
     let rendered_frame = zip(frame0, frame1)
