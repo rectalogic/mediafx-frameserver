@@ -57,7 +57,7 @@ impl FrameServer {
     }
 
     pub fn render(mut self, time: f32) -> Result<RenderResult, Box<dyn Error>> {
-        send_message(RenderFrame::new_render(time), &mut self.client_stdin)?;
+        send_message(RenderFrame::Render(time), &mut self.client_stdin)?;
         let response: ClientResponse = receive_message(&mut self.client_stdout)?;
         Ok(RenderResult { frame_server: self })
     }
@@ -65,7 +65,7 @@ impl FrameServer {
 
 impl Drop for FrameServer {
     fn drop(&mut self) {
-        if send_message(RenderFrame::new_terminate(), &mut self.client_stdin).is_err() {
+        if send_message(RenderFrame::Terminate, &mut self.client_stdin).is_err() {
             let _ = self.client.kill();
         } else {
             let _ = self.client.wait();

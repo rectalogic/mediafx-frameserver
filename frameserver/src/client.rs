@@ -33,13 +33,13 @@ impl FrameClient {
 
     pub fn render_prepare(mut self) -> Result<RenderPrepare, Box<dyn Error>> {
         let render_message: RenderFrame = receive_message(&mut self.stdin)?;
-        if render_message.is_terminate() {
-            std::process::exit(0);
+        match render_message {
+            RenderFrame::Terminate => std::process::exit(0),
+            RenderFrame::Render(time) => Ok(RenderPrepare {
+                frame_client: self,
+                time,
+            }),
         }
-        Ok(RenderPrepare {
-            frame_client: self,
-            time: render_message.time(),
-        })
     }
 }
 
