@@ -26,6 +26,7 @@ impl FrameServer {
         count: usize,
     ) -> Result<Self, Box<dyn Error>> {
         let size = RenderSize::new(width, height, count);
+        // XXX whitelist programs, support args?
         let mut client = Command::new(client_path)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
@@ -43,7 +44,8 @@ impl FrameServer {
         let context = RenderContext::new(size, shmem);
 
         send_message(&render_initialize, &mut client_stdin)?;
-        let response: RenderAck = receive_message(&mut client_stdout)?;
+        // XXX check for errors
+        let _response: RenderAck = receive_message(&mut client_stdout)?;
         Ok(FrameServer {
             context,
             client,
@@ -58,7 +60,8 @@ impl FrameServer {
 
     pub fn render(&mut self, time: f32) -> Result<&mut [u8], Box<dyn Error>> {
         send_message(RenderFrame::Render(time), &mut self.client_stdin)?;
-        let response: RenderAck = receive_message(&mut self.client_stdout)?;
+        // XXX check for errors
+        let _response: RenderAck = receive_message(&mut self.client_stdout)?;
         Ok(self.context.rendered_frame_mut())
     }
 }
