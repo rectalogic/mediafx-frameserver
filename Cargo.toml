@@ -1,3 +1,9 @@
 [workspace]
 resolver = "2"
-members = ["frameserver"]
+members = [
+    "frameserver",
+    "frei0r/mediafx",
+    "frei0r/mediafx_filter",
+    "frei0r/mediafx_mixer2", "frei0r/mediafx_mixer3",
+    "frei0r/mediafx_source",
+]

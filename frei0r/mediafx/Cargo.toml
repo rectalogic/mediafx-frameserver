@@ -1,0 +1,8 @@
+[package]
+name = "mediafx"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+frei0r-rs = { git = "https://github.com/rectalogic/frei0r-rs.git", branch = "updates" }
+frameserver = { path = "../../frameserver" }
