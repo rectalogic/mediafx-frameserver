@@ -13,15 +13,20 @@ pub struct FrameServerPlugin<T> {
     #[frei0r(explain = c"Frameserver client executable path")]
     client_path: CString,
     #[internal]
+    width: u32,
+    #[internal]
+    height: u32,
+    #[internal]
     frame_server: Option<frameserver::server::FrameServer>,
     #[internal]
     _phantom: PhantomData<T>,
 }
 
 mod plugin {
+    use super::*;
+
     pub(super) trait PluginDefault {
         fn info() -> frei0r_rs::PluginInfo;
-        fn new(width: usize, height: usize) -> Self;
     }
 
     impl<T> frei0r_rs::Plugin for super::FrameServerPlugin<T>
@@ -32,8 +37,14 @@ mod plugin {
             <super::FrameServerPlugin<T> as PluginDefault>::info()
         }
 
-        fn new(width: usize, height: usize) -> super::FrameServerPlugin<T> {
-            <super::FrameServerPlugin<T> as PluginDefault>::new(width, height)
+        fn new(width: usize, height: usize) -> Self {
+            Self {
+                width: width as u32,
+                height: height as u32,
+                client_path: c"".to_owned(),
+                frame_server: None,
+                _phantom: PhantomData,
+            }
         }
 
         fn update(
@@ -83,25 +94,11 @@ impl plugin::PluginDefault for FrameServerPlugin<Source> {
     fn info() -> frei0r_rs::PluginInfo {
         plugin_info(frei0r_rs::PluginType::Source)
     }
-    fn new(width: usize, height: usize) -> Self {
-        Self {
-            client_path: c"".to_owned(),
-            frame_server: None,
-            _phantom: PhantomData,
-        }
-    }
 }
 
 impl plugin::PluginDefault for FrameServerPlugin<Filter> {
     fn info() -> frei0r_rs::PluginInfo {
         plugin_info(frei0r_rs::PluginType::Filter)
-    }
-    fn new(width: usize, height: usize) -> Self {
-        Self {
-            client_path: c"".to_owned(),
-            frame_server: None,
-            _phantom: PhantomData,
-        }
     }
 }
 
@@ -109,24 +106,10 @@ impl plugin::PluginDefault for FrameServerPlugin<Mixer2> {
     fn info() -> frei0r_rs::PluginInfo {
         plugin_info(frei0r_rs::PluginType::Mixer2)
     }
-    fn new(width: usize, height: usize) -> Self {
-        Self {
-            client_path: c"".to_owned(),
-            frame_server: None,
-            _phantom: PhantomData,
-        }
-    }
 }
 
 impl plugin::PluginDefault for FrameServerPlugin<Mixer3> {
     fn info() -> frei0r_rs::PluginInfo {
         plugin_info(frei0r_rs::PluginType::Mixer3)
-    }
-    fn new(width: usize, height: usize) -> Self {
-        Self {
-            client_path: c"".to_owned(),
-            frame_server: None,
-            _phantom: PhantomData,
-        }
     }
 }
