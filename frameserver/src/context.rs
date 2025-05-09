@@ -10,7 +10,7 @@ pub(crate) struct RenderContext {
 }
 
 #[derive(Debug, Clone, Copy, Encode, Decode)]
-pub(crate) struct RenderSize {
+pub struct RenderSize {
     width: u32,
     height: u32,
     /// Number of source frame images, does not count the rendered frame
@@ -21,6 +21,10 @@ impl RenderContext {
     pub fn new(size: RenderSize, shmem: Shmem) -> Self {
         RenderContext { size, shmem }
     }
+
+    pub fn render_size(&self) -> RenderSize {
+        self.size
+    }
 }
 
 impl RenderSize {
@@ -30,6 +34,18 @@ impl RenderSize {
             height,
             count,
         }
+    }
+
+    pub fn width(&self) -> u32 {
+        self.width
+    }
+
+    pub fn height(&self) -> u32 {
+        self.height
+    }
+
+    pub fn count(&self) -> usize {
+        self.count
     }
 
     pub fn memory_size(&self) -> usize {

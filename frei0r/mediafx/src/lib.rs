@@ -1,6 +1,6 @@
-use std::{ffi::CString, marker::PhantomData};
+use std::{error::Error, ffi::CString, marker::PhantomData};
 
-use frameserver::server::FrameServer;
+pub use frameserver;
 pub use frei0r_rs;
 
 #[derive(frei0r_rs::PluginBase)]
@@ -43,7 +43,12 @@ where
                     frei0r_rs::PluginType::Mixer2 => 2,
                     frei0r_rs::PluginType::Mixer3 => 3,
                 };
-                match FrameServer::new(client_path, self.width, self.height, count) {
+                match frameserver::server::FrameServer::new(
+                    client_path,
+                    self.width,
+                    self.height,
+                    count,
+                ) {
                     Ok(frame_server) => {
                         self.frame_server = Some(frame_server);
                         self.frame_server.as_mut()
@@ -56,6 +61,74 @@ where
             }
             Some(_) => self.frame_server.as_mut(),
         }
+    }
+
+    fn source(&mut self, time: f64, outframe: &mut [u32]) -> Result<(), Box<dyn Error>> {
+        if let Some(frame_server) = self.frame_server() {
+            let rendered_frame = frame_server.render(time)?;
+            slice_to_bytes_mut(outframe).copy_from_slice(rendered_frame);
+        }
+        Ok(())
+    }
+
+    fn filter(
+        &mut self,
+        time: f64,
+        inframe: &[u32],
+        outframe: &mut [u32],
+    ) -> Result<(), Box<dyn Error>> {
+        if let Some(frame_server) = self.frame_server() {
+            frame_server
+                .get_source_frame_mut(0)?
+                .copy_from_slice(slice_to_bytes(inframe));
+            let rendered_frame = frame_server.render(time)?;
+            slice_to_bytes_mut(outframe).copy_from_slice(rendered_frame);
+        }
+        Ok(())
+    }
+
+    fn mixer2(
+        &mut self,
+        time: f64,
+        inframe1: &[u32],
+        inframe2: &[u32],
+        outframe: &mut [u32],
+    ) -> Result<(), Box<dyn Error>> {
+        if let Some(frame_server) = self.frame_server() {
+            frame_server
+                .get_source_frame_mut(0)?
+                .copy_from_slice(slice_to_bytes(inframe1));
+            frame_server
+                .get_source_frame_mut(1)?
+                .copy_from_slice(slice_to_bytes(inframe2));
+            let rendered_frame = frame_server.render(time)?;
+            slice_to_bytes_mut(outframe).copy_from_slice(rendered_frame);
+        }
+        Ok(())
+    }
+
+    fn mixer3(
+        &mut self,
+        time: f64,
+        inframe1: &[u32],
+        inframe2: &[u32],
+        inframe3: &[u32],
+        outframe: &mut [u32],
+    ) -> Result<(), Box<dyn Error>> {
+        if let Some(frame_server) = self.frame_server() {
+            frame_server
+                .get_source_frame_mut(0)?
+                .copy_from_slice(slice_to_bytes(inframe1));
+            frame_server
+                .get_source_frame_mut(1)?
+                .copy_from_slice(slice_to_bytes(inframe2));
+            frame_server
+                .get_source_frame_mut(2)?
+                .copy_from_slice(slice_to_bytes(inframe3));
+            let rendered_frame = frame_server.render(time)?;
+            slice_to_bytes_mut(outframe).copy_from_slice(rendered_frame);
+        }
+        Ok(())
     }
 }
 
@@ -110,20 +183,16 @@ where
     }
 
     fn source_update(&mut self, time: f64, outframe: &mut [u32]) {
-        if let Some(frame_server) = self.frame_server() {
-            let rendered_frame = frame_server.render(time).unwrap();
-            slice_to_bytes_mut(outframe).copy_from_slice(rendered_frame);
+        if let Err(e) = self.source(time, outframe) {
+            eprintln!("Failed to source frame: {}", e);
+            self.frame_server.take();
         }
     }
 
     fn filter_update(&mut self, time: f64, inframe: &[u32], outframe: &mut [u32]) {
-        if let Some(frame_server) = self.frame_server() {
-            frame_server
-                .get_source_frame_mut(0)
-                .unwrap()
-                .copy_from_slice(slice_to_bytes(inframe));
-            let rendered_frame = frame_server.render(time).unwrap();
-            slice_to_bytes_mut(outframe).copy_from_slice(rendered_frame);
+        if let Err(e) = self.filter(time, inframe, outframe) {
+            eprintln!("Failed to filter frame: {}", e);
+            self.frame_server.take();
         }
     }
 
@@ -134,17 +203,9 @@ where
         inframe2: &[u32],
         outframe: &mut [u32],
     ) {
-        if let Some(frame_server) = self.frame_server() {
-            frame_server
-                .get_source_frame_mut(0)
-                .unwrap()
-                .copy_from_slice(slice_to_bytes(inframe1));
-            frame_server
-                .get_source_frame_mut(1)
-                .unwrap()
-                .copy_from_slice(slice_to_bytes(inframe2));
-            let rendered_frame = frame_server.render(time).unwrap();
-            slice_to_bytes_mut(outframe).copy_from_slice(rendered_frame);
+        if let Err(e) = self.mixer2(time, inframe1, inframe2, outframe) {
+            eprintln!("Failed to mixer2 frame: {}", e);
+            self.frame_server.take();
         }
     }
 
@@ -156,21 +217,9 @@ where
         inframe3: &[u32],
         outframe: &mut [u32],
     ) {
-        if let Some(frame_server) = self.frame_server() {
-            frame_server
-                .get_source_frame_mut(0)
-                .unwrap()
-                .copy_from_slice(slice_to_bytes(inframe1));
-            frame_server
-                .get_source_frame_mut(1)
-                .unwrap()
-                .copy_from_slice(slice_to_bytes(inframe2));
-            frame_server
-                .get_source_frame_mut(2)
-                .unwrap()
-                .copy_from_slice(slice_to_bytes(inframe3));
-            let rendered_frame = frame_server.render(time).unwrap();
-            slice_to_bytes_mut(outframe).copy_from_slice(rendered_frame);
+        if let Err(e) = self.mixer3(time, inframe1, inframe2, inframe3, outframe) {
+            eprintln!("Failed to mixer3 frame: {}", e);
+            self.frame_server.take();
         }
     }
 }

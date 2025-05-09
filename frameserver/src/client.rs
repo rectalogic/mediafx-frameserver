@@ -3,7 +3,7 @@ use std::error::Error;
 use shared_memory::ShmemConf;
 
 use crate::{
-    context::RenderContext,
+    context::{RenderContext, RenderSize},
     messages::{RenderAck, RenderFrame, RenderInitialize, receive_message, send_message},
 };
 
@@ -29,6 +29,10 @@ impl FrameClient {
             stdout,
             context,
         })
+    }
+
+    pub fn render_size(&self) -> RenderSize {
+        self.context.render_size()
     }
 
     pub fn request_render(mut self) -> Result<RenderRequest, Box<dyn Error>> {
