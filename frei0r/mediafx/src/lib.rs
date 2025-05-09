@@ -3,14 +3,8 @@ use std::{ffi::CString, marker::PhantomData};
 use frameserver::server::FrameServer;
 pub use frei0r_rs;
 
-//XXX can we define a trait and move these into each plugin, and store this in FrameServerPlugin instead of phantom, so we can invoke it?
-pub struct Source;
-pub struct Filter;
-pub struct Mixer2;
-pub struct Mixer3;
-
 #[derive(frei0r_rs::PluginBase)]
-pub struct FrameServerPlugin<T> {
+pub struct FrameServerPlugin<T: PluginType> {
     #[frei0r(explain = c"Frameserver client executable path")]
     client_path: CString,
     width: u32,
@@ -20,13 +14,13 @@ pub struct FrameServerPlugin<T> {
     _phantom: PhantomData<T>,
 }
 
-trait PluginDefault {
-    fn info() -> frei0r_rs::PluginInfo;
+pub trait PluginType {
+    const PLUGIN_TYPE: frei0r_rs::PluginType;
 }
 
 impl<T> FrameServerPlugin<T>
 where
-    FrameServerPlugin<T>: PluginDefault,
+    T: PluginType,
 {
     fn frame_server(&mut self) -> Option<&mut frameserver::server::FrameServer> {
         if self.frame_server_initialized {
@@ -43,8 +37,7 @@ where
                     }
                 };
 
-                let count: usize = match <FrameServerPlugin<T> as PluginDefault>::info().plugin_type
-                {
+                let count: usize = match T::PLUGIN_TYPE {
                     frei0r_rs::PluginType::Source => 0,
                     frei0r_rs::PluginType::Filter => 1,
                     frei0r_rs::PluginType::Mixer2 => 2,
@@ -76,10 +69,33 @@ fn slice_to_bytes(slice: &[u32]) -> &[u8] {
 
 impl<T> frei0r_rs::Plugin for FrameServerPlugin<T>
 where
-    FrameServerPlugin<T>: PluginDefault,
+    T: PluginType,
 {
     fn info() -> frei0r_rs::PluginInfo {
-        <FrameServerPlugin<T> as PluginDefault>::info()
+        let plugin_type = T::PLUGIN_TYPE;
+        let (name, explanation) = match plugin_type {
+            frei0r_rs::PluginType::Source => {
+                (c"Frameserver source", c"Handles source plugin clients")
+            }
+            frei0r_rs::PluginType::Filter => {
+                (c"Frameserver filter", c"Handles filter plugin clients")
+            }
+            frei0r_rs::PluginType::Mixer2 => {
+                (c"Frameserver mixer2", c"Handles mixer2 plugin clients")
+            }
+            frei0r_rs::PluginType::Mixer3 => {
+                (c"Frameserver mixer3", c"Handles mixer3 plugin clients")
+            }
+        };
+        frei0r_rs::PluginInfo {
+            name,
+            author: c"Andrew Wason",
+            plugin_type,
+            color_model: frei0r_rs::ColorModel::RGBA8888,
+            major_version: 1,
+            minor_version: 0,
+            explanation,
+        }
     }
 
     fn new(width: usize, height: usize) -> Self {
@@ -156,47 +172,5 @@ where
             let rendered_frame = frame_server.render(time).unwrap();
             slice_to_bytes_mut(outframe).copy_from_slice(rendered_frame);
         }
-    }
-}
-
-fn plugin_info(plugin_type: frei0r_rs::PluginType) -> frei0r_rs::PluginInfo {
-    let (name, explanation) = match plugin_type {
-        frei0r_rs::PluginType::Source => (c"Frameserver source", c"Handles source plugin clients"),
-        frei0r_rs::PluginType::Filter => (c"Frameserver filter", c"Handles filter plugin clients"),
-        frei0r_rs::PluginType::Mixer2 => (c"Frameserver mixer2", c"Handles mixer2 plugin clients"),
-        frei0r_rs::PluginType::Mixer3 => (c"Frameserver mixer3", c"Handles mixer3 plugin clients"),
-    };
-    frei0r_rs::PluginInfo {
-        name,
-        author: c"Andrew Wason",
-        plugin_type,
-        color_model: frei0r_rs::ColorModel::RGBA8888,
-        major_version: 1,
-        minor_version: 0,
-        explanation,
-    }
-}
-
-impl PluginDefault for FrameServerPlugin<Source> {
-    fn info() -> frei0r_rs::PluginInfo {
-        plugin_info(frei0r_rs::PluginType::Source)
-    }
-}
-
-impl PluginDefault for FrameServerPlugin<Filter> {
-    fn info() -> frei0r_rs::PluginInfo {
-        plugin_info(frei0r_rs::PluginType::Filter)
-    }
-}
-
-impl PluginDefault for FrameServerPlugin<Mixer2> {
-    fn info() -> frei0r_rs::PluginInfo {
-        plugin_info(frei0r_rs::PluginType::Mixer2)
-    }
-}
-
-impl PluginDefault for FrameServerPlugin<Mixer3> {
-    fn info() -> frei0r_rs::PluginInfo {
-        plugin_info(frei0r_rs::PluginType::Mixer3)
     }
 }

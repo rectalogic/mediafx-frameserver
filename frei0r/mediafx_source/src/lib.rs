@@ -1,3 +1,9 @@
-use mediafx::{FrameServerPlugin, Source, frei0r_rs};
+use mediafx::{FrameServerPlugin, PluginType, frei0r_rs};
+
+struct Source;
+
+impl PluginType for Source {
+    const PLUGIN_TYPE: frei0r_rs::PluginType = frei0r_rs::PluginType::Source;
+}
 
 frei0r_rs::plugin!(FrameServerPlugin<Source>);
