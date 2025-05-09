@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Andrew Wason
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 use bincode::{Decode, Encode};
 use shared_memory::Shmem;
 use std::{error::Error, ops::Range};

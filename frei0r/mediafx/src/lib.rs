@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Andrew Wason
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 use std::{error::Error, ffi::CString, marker::PhantomData};
 
 pub use frameserver;

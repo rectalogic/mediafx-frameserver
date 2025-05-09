@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Andrew Wason
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 use mediafx::frameserver::client;
 
 // XXX need to forward params to client
