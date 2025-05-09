@@ -45,11 +45,11 @@ impl FrameClient {
 
 pub struct RenderRequest {
     frame_client: FrameClient,
-    time: f32,
+    time: f64,
 }
 
 impl RenderRequest {
-    pub fn time(&self) -> f32 {
+    pub fn time(&self) -> f64 {
         self.time
     }
 

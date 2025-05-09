@@ -1,7 +1,9 @@
 use std::{ffi::CString, marker::PhantomData};
 
+use frameserver::server::FrameServer;
 pub use frei0r_rs;
 
+//XXX can we define a trait and move these into each plugin, and store this in FrameServerPlugin instead of phantom, so we can invoke it?
 pub struct Source;
 pub struct Filter;
 pub struct Mixer2;
@@ -11,18 +13,65 @@ pub struct Mixer3;
 pub struct FrameServerPlugin<T> {
     #[frei0r(explain = c"Frameserver client executable path")]
     client_path: CString,
-    #[internal]
     width: u32,
-    #[internal]
     height: u32,
-    #[internal]
     frame_server: Option<frameserver::server::FrameServer>,
-    #[internal]
+    frame_server_initialized: bool,
     _phantom: PhantomData<T>,
 }
 
 trait PluginDefault {
     fn info() -> frei0r_rs::PluginInfo;
+}
+
+impl<T> FrameServerPlugin<T>
+where
+    FrameServerPlugin<T>: PluginDefault,
+{
+    fn frame_server(&mut self) -> Option<&mut frameserver::server::FrameServer> {
+        if self.frame_server_initialized {
+            return self.frame_server.as_mut();
+        }
+        self.frame_server_initialized = true;
+        match self.frame_server {
+            None => {
+                let client_path = match self.client_path.to_str() {
+                    Ok(client_path) => client_path,
+                    Err(e) => {
+                        eprintln!("Failed to parse client_path: {}", e);
+                        return None;
+                    }
+                };
+
+                let count: usize = match <FrameServerPlugin<T> as PluginDefault>::info().plugin_type
+                {
+                    frei0r_rs::PluginType::Source => 0,
+                    frei0r_rs::PluginType::Filter => 1,
+                    frei0r_rs::PluginType::Mixer2 => 2,
+                    frei0r_rs::PluginType::Mixer3 => 3,
+                };
+                match FrameServer::new(client_path, self.width, self.height, count) {
+                    Ok(frame_server) => {
+                        self.frame_server = Some(frame_server);
+                        self.frame_server.as_mut()
+                    }
+                    Err(e) => {
+                        eprintln!("Failed to create frame server: {}", e);
+                        None
+                    }
+                }
+            }
+            Some(_) => self.frame_server.as_mut(),
+        }
+    }
+}
+
+fn slice_to_bytes_mut(slice: &mut [u32]) -> &mut [u8] {
+    unsafe { std::slice::from_raw_parts_mut(slice.as_mut_ptr().cast::<u8>(), size_of_val(slice)) }
+}
+
+fn slice_to_bytes(slice: &[u32]) -> &[u8] {
+    unsafe { std::slice::from_raw_parts(slice.as_ptr().cast::<u8>(), size_of_val(slice)) }
 }
 
 impl<T> frei0r_rs::Plugin for FrameServerPlugin<T>
@@ -39,31 +88,74 @@ where
             height: height as u32,
             client_path: c"".to_owned(),
             frame_server: None,
+            frame_server_initialized: false,
             _phantom: PhantomData,
         }
     }
 
-    fn update(
-        &self,
-        _time: f64,
-        _width: usize,
-        _height: usize,
-        _inframe: &[u32],
-        _outframe: &mut [u32],
-    ) {
+    fn source_update(&mut self, time: f64, outframe: &mut [u32]) {
+        if let Some(frame_server) = self.frame_server() {
+            let rendered_frame = frame_server.render(time).unwrap();
+            slice_to_bytes_mut(outframe).copy_from_slice(rendered_frame);
+        }
     }
 
-    fn update2(
-        &self,
-        _: f64,
-        _width: usize,
-        _height: usize,
-        _inframe1: &[u32],
-        _inframe2: &[u32],
-        _inframe3: &[u32],
-        _outframe: &mut [u32],
+    fn filter_update(&mut self, time: f64, inframe: &[u32], outframe: &mut [u32]) {
+        if let Some(frame_server) = self.frame_server() {
+            frame_server
+                .get_source_frame_mut(0)
+                .unwrap()
+                .copy_from_slice(slice_to_bytes(inframe));
+            let rendered_frame = frame_server.render(time).unwrap();
+            slice_to_bytes_mut(outframe).copy_from_slice(rendered_frame);
+        }
+    }
+
+    fn mixer2_update(
+        &mut self,
+        time: f64,
+        inframe1: &[u32],
+        inframe2: &[u32],
+        outframe: &mut [u32],
     ) {
-        unreachable!()
+        if let Some(frame_server) = self.frame_server() {
+            frame_server
+                .get_source_frame_mut(0)
+                .unwrap()
+                .copy_from_slice(slice_to_bytes(inframe1));
+            frame_server
+                .get_source_frame_mut(1)
+                .unwrap()
+                .copy_from_slice(slice_to_bytes(inframe2));
+            let rendered_frame = frame_server.render(time).unwrap();
+            slice_to_bytes_mut(outframe).copy_from_slice(rendered_frame);
+        }
+    }
+
+    fn mixer3_update(
+        &mut self,
+        time: f64,
+        inframe1: &[u32],
+        inframe2: &[u32],
+        inframe3: &[u32],
+        outframe: &mut [u32],
+    ) {
+        if let Some(frame_server) = self.frame_server() {
+            frame_server
+                .get_source_frame_mut(0)
+                .unwrap()
+                .copy_from_slice(slice_to_bytes(inframe1));
+            frame_server
+                .get_source_frame_mut(1)
+                .unwrap()
+                .copy_from_slice(slice_to_bytes(inframe2));
+            frame_server
+                .get_source_frame_mut(2)
+                .unwrap()
+                .copy_from_slice(slice_to_bytes(inframe3));
+            let rendered_frame = frame_server.render(time).unwrap();
+            slice_to_bytes_mut(outframe).copy_from_slice(rendered_frame);
+        }
     }
 }
 

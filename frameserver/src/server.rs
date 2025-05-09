@@ -58,7 +58,7 @@ impl FrameServer {
         self.context.frame_mut(frame_num)
     }
 
-    pub fn render(&mut self, time: f32) -> Result<&mut [u8], Box<dyn Error>> {
+    pub fn render(&mut self, time: f64) -> Result<&mut [u8], Box<dyn Error>> {
         send_message(RenderFrame::Render(time), &mut self.client_stdin)?;
         // XXX check for errors
         let _response: RenderAck = receive_message(&mut self.client_stdout)?;

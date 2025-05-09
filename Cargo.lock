@@ -120,8 +120,8 @@ dependencies = [
 
 [[package]]
 name = "frei0r-macros"
-version = "0.1.3"
-source = "git+https://github.com/rectalogic/frei0r-rs.git?branch=updates#7c5c25b1d2a7346fd2734519b5e6256fae275bb9"
+version = "1.0.0"
+source = "git+https://github.com/rectalogic/frei0r-rs.git?branch=updates#15e1dfe1454556d658d16ba4390ef9fb3964b064"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -130,8 +130,8 @@ dependencies = [
 
 [[package]]
 name = "frei0r-rs"
-version = "0.1.2"
-source = "git+https://github.com/rectalogic/frei0r-rs.git?branch=updates#7c5c25b1d2a7346fd2734519b5e6256fae275bb9"
+version = "1.0.0"
+source = "git+https://github.com/rectalogic/frei0r-rs.git?branch=updates#15e1dfe1454556d658d16ba4390ef9fb3964b064"
 dependencies = [
  "frei0r-macros",
  "frei0r-sys",
@@ -139,8 +139,8 @@ dependencies = [
 
 [[package]]
 name = "frei0r-sys"
-version = "0.1.2"
-source = "git+https://github.com/rectalogic/frei0r-rs.git?branch=updates#7c5c25b1d2a7346fd2734519b5e6256fae275bb9"
+version = "1.0.0"
+source = "git+https://github.com/rectalogic/frei0r-rs.git?branch=updates#15e1dfe1454556d658d16ba4390ef9fb3964b064"
 dependencies = [
  "bindgen",
 ]

@@ -20,7 +20,7 @@ pub struct RenderAck {
 
 #[derive(Encode, Decode, Debug)]
 pub enum RenderFrame {
-    Render(f32),
+    Render(f64),
     Terminate,
 }
 
