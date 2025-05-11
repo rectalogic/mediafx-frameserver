@@ -147,9 +147,10 @@ impl<T> frei0r_rs::Plugin for FrameServerPlugin<T>
 where
     T: PluginType,
 {
+    const PLUGIN_TYPE: frei0r_rs::PluginType = T::PLUGIN_TYPE;
+
     fn info() -> frei0r_rs::PluginInfo {
-        let plugin_type = T::PLUGIN_TYPE;
-        let (name, explanation) = match plugin_type {
+        let (name, explanation) = match Self::PLUGIN_TYPE {
             frei0r_rs::PluginType::Source => {
                 (c"Frameserver source", c"Handles source plugin clients")
             }
@@ -166,7 +167,6 @@ where
         frei0r_rs::PluginInfo {
             name,
             author: c"Andrew Wason",
-            plugin_type,
             color_model: frei0r_rs::ColorModel::RGBA8888,
             major_version: 1,
             minor_version: 0,
