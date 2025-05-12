@@ -6,3 +6,9 @@ edition = "2024"
 [dependencies]
 frei0r-rs = { git = "https://github.com/rectalogic/frei0r-rs.git", branch = "updates" }
 frameserver = { path = "../../frameserver" }
+
+[[example]]
+name = "shift"
+
+[[example]]
+name = "color"
