@@ -191,8 +191,8 @@ where
             name: K::NAME,
             author: c"Andrew Wason",
             color_model: frei0r_rs::ColorModel::RGBA8888,
-            major_version: 1,
-            minor_version: 0,
+            major_version: env!("CARGO_PKG_VERSION_MAJOR").parse().unwrap(),
+            minor_version: env!("CARGO_PKG_VERSION_MINOR").parse().unwrap(),
             explanation: K::EXPLANATION,
         }
     }

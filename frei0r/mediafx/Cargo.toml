@@ -1,7 +1,8 @@
 [package]
 name = "mediafx"
-version = "0.1.0"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
 
 [dependencies]
 frei0r-rs = { git = "https://github.com/rectalogic/frei0r-rs.git", branch = "updates" }

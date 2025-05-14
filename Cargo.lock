@@ -112,7 +112,7 @@ checksum = "48c757948c5ede0e46177b7add2e67155f70e33c07fea8284df6576da70b3719"
 
 [[package]]
 name = "frameserver"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bincode",
  "shared_memory",
@@ -195,7 +195,7 @@ checksum = "13dc2df351e3202783a1fe0d44375f7295ffb4049267b0f3018346dc122a1d94"
 
 [[package]]
 name = "mediafx"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "frameserver",
  "frei0r-rs",
@@ -203,28 +203,28 @@ dependencies = [
 
 [[package]]
 name = "mediafx_filter"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "mediafx",
 ]
 
 [[package]]
 name = "mediafx_mixer2"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "mediafx",
 ]
 
 [[package]]
 name = "mediafx_mixer3"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "mediafx",
 ]
 
 [[package]]
 name = "mediafx_source"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "mediafx",
 ]

@@ -4,6 +4,12 @@ members = [
     "frameserver",
     "frei0r/mediafx",
     "frei0r/mediafx_filter",
-    "frei0r/mediafx_mixer2", "frei0r/mediafx_mixer3",
+    "frei0r/mediafx_mixer2",
+    "frei0r/mediafx_mixer3",
     "frei0r/mediafx_source",
 ]
+
+[workspace.package]
+version = "0.1.1"
+edition = "2024"
+license = "GPL-3.0-or-later"
