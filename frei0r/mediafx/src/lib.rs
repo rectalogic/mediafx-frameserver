@@ -48,6 +48,7 @@ where
                 let client_path = match self.client_path.to_str() {
                     Ok(client_path) => client_path,
                     Err(e) => {
+                        debug_assert!(false, "Failed to parse client_path: {}", e);
                         eprintln!("Failed to parse client_path: {}", e);
                         return None;
                     }
@@ -64,6 +65,7 @@ where
                         self.frame_server.as_mut()
                     }
                     Err(e) => {
+                        debug_assert!(false, "Failed to create frame server: {}", e);
                         eprintln!("Failed to create frame server: {}", e);
                         None
                     }
@@ -205,6 +207,7 @@ where
 impl frei0r_rs::FilterPlugin for FrameServerPlugin<frei0r_rs::KindFilter> {
     fn update_filter(&mut self, time: f64, inframe: &[u32], outframe: &mut [u32]) {
         if let Err(e) = self.filter(time, inframe, outframe) {
+            debug_assert!(false, "Failed to filter frame: {}", e);
             eprintln!("Failed to filter frame: {}", e);
             self.frame_server.take();
         }
@@ -214,6 +217,7 @@ impl frei0r_rs::FilterPlugin for FrameServerPlugin<frei0r_rs::KindFilter> {
 impl frei0r_rs::SourcePlugin for FrameServerPlugin<frei0r_rs::KindSource> {
     fn update_source(&mut self, time: f64, outframe: &mut [u32]) {
         if let Err(e) = self.source(time, outframe) {
+            debug_assert!(false, "Failed to source frame: {}", e);
             eprintln!("Failed to source frame: {}", e);
             self.frame_server.take();
         }
@@ -229,6 +233,7 @@ impl frei0r_rs::Mixer2Plugin for FrameServerPlugin<frei0r_rs::KindMixer2> {
         outframe: &mut [u32],
     ) {
         if let Err(e) = self.mixer2(time, inframe1, inframe2, outframe) {
+            debug_assert!(false, "Failed to mixer2 frame: {}", e);
             eprintln!("Failed to mixer2 frame: {}", e);
             self.frame_server.take();
         }
@@ -245,6 +250,7 @@ impl frei0r_rs::Mixer3Plugin for FrameServerPlugin<frei0r_rs::KindMixer3> {
         outframe: &mut [u32],
     ) {
         if let Err(e) = self.mixer3(time, inframe1, inframe2, inframe3, outframe) {
+            debug_assert!(false, "Failed to mixer3 frame: {}", e);
             eprintln!("Failed to mixer3 frame: {}", e);
             self.frame_server.take();
         }
