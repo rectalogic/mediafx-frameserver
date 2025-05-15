@@ -37,7 +37,7 @@ impl MediaFX {
         Ok(size.count())
     }
 
-    fn render(&mut self, buffers: Bound<PyList>) -> PyResult<()> {
+    fn render(&mut self, buffers: Bound<PyList>) -> PyResult<f64> {
         let current_state = self
             .state
             .take()
@@ -45,9 +45,10 @@ impl MediaFX {
         match current_state {
             State::FrameClient(client) => match client.request_render() {
                 Ok(render_request) => {
+                    let time = render_request.time();
                     self.copy_source_frames(&render_request, buffers)?;
                     self.state = Some(State::RenderRequest(render_request));
-                    Ok(())
+                    Ok(time)
                 }
                 Err((client, err)) => {
                     self.state = Some(State::FrameClient(client));
@@ -55,9 +56,10 @@ impl MediaFX {
                 }
             },
             State::RenderRequest(render_request) => {
+                let time = render_request.time();
                 self.copy_source_frames(&render_request, buffers)?;
                 self.state = Some(State::RenderRequest(render_request));
-                Ok(())
+                Ok(time)
             }
         }
     }
