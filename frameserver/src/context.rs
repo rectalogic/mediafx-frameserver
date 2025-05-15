@@ -56,6 +56,11 @@ impl RenderSize {
     }
 }
 
+// Safety: borrow checker shuld enforce mutable references on RenderContext access to Shmem
+unsafe impl Sync for RenderContext {}
+// Safety: Shmem is only accessed in RenderContext
+unsafe impl Send for RenderContext {}
+
 impl RenderContext {
     pub fn frame(&self, frame_num: usize) -> Result<&[u8], Box<dyn Error>> {
         self.check_frame(frame_num)?;

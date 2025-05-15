@@ -60,6 +60,10 @@ impl RenderRequest {
         self.time
     }
 
+    pub fn render_size(&self) -> RenderSize {
+        self.frame_client.context.render_size()
+    }
+
     pub fn get_source_frame(&self, frame_num: usize) -> Result<&[u8], Box<dyn Error>> {
         self.frame_client.context.frame(frame_num)
     }

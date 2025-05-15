@@ -1,6 +1,14 @@
-from .mediafx import *
+# Copyright (C) 2025 Andrew Wason
+# SPDX-License-Identifier: GPL-3.0-or-later
 
+from . import mediafx
 
-__doc__ = mediafx.__doc__
-if hasattr(mediafx, "__all__"):
-    __all__ = mediafx.__all__
+class MediaFX:
+    def __init__(self):
+        self.client = mediafx.MediaFX()
+        width, height = self.client.frame_size
+        byte_count = width * height * 4
+        self.frames = [bytearray(byte_count) for _ in range(self.client.frame_count)]
+
+    def render(self):
+        #XXX pass self.frames in
