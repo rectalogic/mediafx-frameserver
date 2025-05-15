@@ -7,6 +7,7 @@ members = [
     "frei0r/mediafx_mixer2",
     "frei0r/mediafx_mixer3",
     "frei0r/mediafx_source",
+    "clients/mediafx-py",
 ]
 
 [workspace.package]
