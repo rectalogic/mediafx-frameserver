@@ -20,6 +20,14 @@ pub struct RenderSize {
     count: usize,
 }
 
+impl std::fmt::Debug for RenderContext {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("RenderContext")
+            .field("size", &self.size)
+            .finish()
+    }
+}
+
 impl RenderContext {
     pub fn new(size: RenderSize, shmem: Shmem) -> Self {
         RenderContext { size, shmem }

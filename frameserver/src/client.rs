@@ -5,11 +5,12 @@ use std::error::Error;
 
 use shared_memory::ShmemConf;
 
+pub use crate::context::RenderSize;
 use crate::{
-    context::{RenderContext, RenderSize},
+    context::RenderContext,
     messages::{RenderAck, RenderFrame, RenderInitialize, receive_message, send_message},
 };
-
+#[derive(Debug)]
 pub struct FrameClient {
     stdin: std::io::Stdin,
     stdout: std::io::Stdout,
@@ -38,18 +39,20 @@ impl FrameClient {
         self.context.render_size()
     }
 
-    pub fn request_render(mut self) -> Result<RenderRequest, Box<dyn Error>> {
-        let render_message: RenderFrame = receive_message(&mut self.stdin)?;
-        match render_message {
-            RenderFrame::Terminate => std::process::exit(0),
-            RenderFrame::Render(time) => Ok(RenderRequest {
+    #[allow(clippy::result_large_err)]
+    pub fn request_render(mut self) -> Result<RenderRequest, (Self, Box<dyn Error>)> {
+        match receive_message(&mut self.stdin) {
+            Ok(RenderFrame::Terminate) => std::process::exit(0),
+            Ok(RenderFrame::Render(time)) => Ok(RenderRequest {
                 frame_client: self,
                 time,
             }),
+            Err(err) => Err((self, Box::new(err))),
         }
     }
 }
 
+#[derive(Debug)]
 pub struct RenderRequest {
     frame_client: FrameClient,
     time: f64,
@@ -72,8 +75,11 @@ impl RenderRequest {
         self.frame_client.context.rendered_frame_mut()
     }
 
-    pub fn render_complete(mut self) -> Result<FrameClient, Box<dyn Error>> {
-        send_message(RenderAck::default(), &mut self.frame_client.stdout)?;
-        Ok(self.frame_client)
+    #[allow(clippy::result_large_err)]
+    pub fn render_complete(mut self) -> Result<FrameClient, (Self, Box<dyn Error>)> {
+        match send_message(RenderAck::default(), &mut self.frame_client.stdout) {
+            Ok(_) => Ok(self.frame_client),
+            Err(err) => Err((self, err)),
+        }
     }
 }
