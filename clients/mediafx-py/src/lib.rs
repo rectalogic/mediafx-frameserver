@@ -45,12 +45,8 @@ impl MediaFX {
         match current_state {
             State::FrameClient(client) => match client.request_render() {
                 Ok(render_request) => {
+                    self.copy_source_frames(&render_request, buffers)?;
                     self.state = Some(State::RenderRequest(render_request));
-                    for buffer in buffers {
-                        let frame: PyBuffer<u8> = PyBuffer::get(&buffer)?;
-                        //XXX copy frame slice into buffer
-                        println!("Buffer length: {}", frame.len_bytes());
-                    }
                     Ok(())
                 }
                 Err((client, err)) => {
@@ -59,8 +55,9 @@ impl MediaFX {
                 }
             },
             State::RenderRequest(render_request) => {
+                self.copy_source_frames(&render_request, buffers)?;
                 self.state = Some(State::RenderRequest(render_request));
-                Err(PyRuntimeError::new_err("Incorrect state"))
+                Ok(())
             }
         }
     }
@@ -73,6 +70,23 @@ impl MediaFX {
             Some(State::RenderRequest(ref client)) => client.render_size(),
             None => unreachable!(),
         }
+    }
+
+    fn copy_source_frames(
+        &self,
+        render_request: &RenderRequest,
+        buffers: Bound<PyList>,
+    ) -> PyResult<()> {
+        Python::with_gil(|py| -> PyResult<()> {
+            for (frame_num, buffer) in buffers.iter().enumerate() {
+                let frame: PyBuffer<u8> = PyBuffer::get(&buffer)?;
+                match render_request.get_source_frame(frame_num) {
+                    Ok(source) => frame.copy_from_slice(py, source)?,
+                    Err(err) => return Err(PyRuntimeError::new_err(err.to_string())),
+                }
+            }
+            Ok(())
+        })
     }
 }
 
