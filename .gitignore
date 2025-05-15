@@ -1,2 +1,3 @@
 /target
-.venv/
+clients/mediafx-py/**/.venv/
+clients/mediafx-py/**/*.so

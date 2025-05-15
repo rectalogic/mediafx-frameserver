@@ -10,5 +10,5 @@ class MediaFX:
         byte_count = width * height * 4
         self.frames = [bytearray(byte_count) for _ in range(self.client.frame_count)]
 
-    def render(self):
-        #XXX pass self.frames in
+    def render(self) -> float:
+        return self.client.render(self.frames)

@@ -13,4 +13,4 @@ frameserver = { path = "../../frameserver" }
 
 [dependencies.pyo3]
 version = "0.25"
-features = ["abi3-py311"]
+features = ["abi3-py312"]
