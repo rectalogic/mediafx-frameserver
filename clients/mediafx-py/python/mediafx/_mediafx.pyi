@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Andrew Wason
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-from collections.abc import Buffer
+from collections.abc import Buffer, Sequence
 
 class MediaFX:
     @property
@@ -10,4 +10,6 @@ class MediaFX:
     @property
     def frame_count(self) -> int: ...
 
-    def render(self, list[Buffer]) -> float: ...
+    def render_begin(self, frames: Sequence[Buffer]) -> float: ...
+
+    def render_finish(self, rendered_frame: Buffer) -> None: ...
