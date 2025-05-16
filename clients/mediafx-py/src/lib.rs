@@ -93,7 +93,7 @@ impl MediaFX {
 }
 
 #[pymodule]
-fn mediafx(m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn _mediafx(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<MediaFX>()?;
     Ok(())
 }
