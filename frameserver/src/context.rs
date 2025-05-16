@@ -5,7 +5,7 @@ use bincode::{Decode, Encode};
 use shared_memory::Shmem;
 use std::{error::Error, ops::Range};
 
-const BYTES_PER_PIXEL: usize = 4;
+pub const BYTES_PER_PIXEL: usize = 4;
 
 pub(crate) struct RenderContext {
     size: RenderSize,
