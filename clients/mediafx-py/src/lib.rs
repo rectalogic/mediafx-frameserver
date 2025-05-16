@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 use frameserver::client::{FrameClient, RenderRequest, RenderSize};
-use pyo3::{buffer::PyBuffer, exceptions::PyRuntimeError, prelude::*, types::PyList};
+use pyo3::{buffer::PyBuffer, exceptions::PyRuntimeError, prelude::*, types::PySequence};
 
 enum State {
     FrameClient(FrameClient),
@@ -37,11 +37,8 @@ impl MediaFX {
         Ok(size.count())
     }
 
-    fn render(&mut self, buffers: Bound<PyList>) -> PyResult<f64> {
-        let current_state = self
-            .state
-            .take()
-            .ok_or_else(|| PyRuntimeError::new_err("Invalid internal state"))?;
+    fn render_begin(&mut self, buffers: Bound<PySequence>) -> PyResult<f64> {
+        let current_state = self.state.take().expect("Invalid internal state");
         match current_state {
             State::FrameClient(client) => match client.request_render() {
                 Ok(render_request) => {
@@ -63,6 +60,39 @@ impl MediaFX {
             }
         }
     }
+
+    fn render_finish(&mut self, frame: PyBuffer<u8>) -> PyResult<()> {
+        let current_state = self.state.take().expect("Invalid internal state");
+        match current_state {
+            State::RenderRequest(mut render_request) => {
+                let rendered_frame = render_request.get_rendered_frame_mut();
+                match Python::with_gil(|py| -> PyResult<()> {
+                    frame.copy_to_slice(py, rendered_frame)
+                }) {
+                    Ok(_) => {}
+                    Err(err) => {
+                        self.state = Some(State::RenderRequest(render_request));
+                        return Err(PyRuntimeError::new_err(err.to_string()));
+                    }
+                }
+
+                match render_request.render_complete() {
+                    Ok(client) => {
+                        self.state = Some(State::FrameClient(client));
+                        Ok(())
+                    }
+                    Err((render_request, err)) => {
+                        self.state = Some(State::RenderRequest(render_request));
+                        Err(PyRuntimeError::new_err(err.to_string()))
+                    }
+                }
+            }
+            State::FrameClient(client) => {
+                self.state = Some(State::FrameClient(client));
+                Err(PyRuntimeError::new_err("Invalid state"))
+            }
+        }
+    }
 }
 
 impl MediaFX {
@@ -77,11 +107,11 @@ impl MediaFX {
     fn copy_source_frames(
         &self,
         render_request: &RenderRequest,
-        buffers: Bound<PyList>,
+        buffers: Bound<PySequence>,
     ) -> PyResult<()> {
         Python::with_gil(|py| -> PyResult<()> {
-            for (frame_num, buffer) in buffers.iter().enumerate() {
-                let frame: PyBuffer<u8> = PyBuffer::get(&buffer)?;
+            for (frame_num, buffer) in buffers.try_iter()?.enumerate() {
+                let frame: PyBuffer<u8> = PyBuffer::get(&buffer?)?;
                 match render_request.get_source_frame(frame_num) {
                     Ok(source) => frame.copy_from_slice(py, source)?,
                     Err(err) => return Err(PyRuntimeError::new_err(err.to_string())),
