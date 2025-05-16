@@ -5,7 +5,7 @@ use std::error::Error;
 
 use shared_memory::ShmemConf;
 
-pub use crate::context::RenderSize;
+pub use crate::context::{BYTES_PER_PIXEL, RenderSize};
 use crate::{
     context::RenderContext,
     messages::{RenderAck, RenderFrame, RenderInitialize, receive_message, send_message},

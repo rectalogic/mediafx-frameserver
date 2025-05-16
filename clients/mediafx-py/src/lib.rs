@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Andrew Wason
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use frameserver::client::{FrameClient, RenderRequest, RenderSize};
+use frameserver::client::{BYTES_PER_PIXEL, FrameClient, RenderRequest, RenderSize};
 use pyo3::{buffer::PyBuffer, exceptions::PyRuntimeError, prelude::*, types::PySequence};
 
 enum State {
@@ -26,6 +26,12 @@ impl MediaFX {
     }
 
     #[getter]
+    fn get_frame_bytecount(&self) -> PyResult<usize> {
+        let size = self.get_size();
+        Ok((size.width() * size.height()) as usize * BYTES_PER_PIXEL)
+    }
+
+    #[getter]
     fn get_frame_size(&self) -> PyResult<(u32, u32)> {
         let size = self.get_size();
         Ok((size.width(), size.height()))
@@ -37,13 +43,16 @@ impl MediaFX {
         Ok(size.count())
     }
 
-    fn render_begin(&mut self, buffers: Bound<PySequence>) -> PyResult<f64> {
+    #[pyo3(signature = (frames=None))]
+    fn render_begin(&mut self, frames: Option<&Bound<PySequence>>) -> PyResult<f64> {
         let current_state = self.state.take().expect("Invalid internal state");
         match current_state {
             State::FrameClient(client) => match client.request_render() {
                 Ok(render_request) => {
                     let time = render_request.time();
-                    self.copy_source_frames(&render_request, buffers)?;
+                    if let Some(buffers) = frames {
+                        self.copy_source_frames(&render_request, buffers)?;
+                    }
                     self.state = Some(State::RenderRequest(render_request));
                     Ok(time)
                 }
@@ -54,7 +63,9 @@ impl MediaFX {
             },
             State::RenderRequest(render_request) => {
                 let time = render_request.time();
-                self.copy_source_frames(&render_request, buffers)?;
+                if let Some(buffers) = frames {
+                    self.copy_source_frames(&render_request, buffers)?;
+                }
                 self.state = Some(State::RenderRequest(render_request));
                 Ok(time)
             }
@@ -107,10 +118,10 @@ impl MediaFX {
     fn copy_source_frames(
         &self,
         render_request: &RenderRequest,
-        buffers: Bound<PySequence>,
+        frames: &Bound<PySequence>,
     ) -> PyResult<()> {
         Python::with_gil(|py| -> PyResult<()> {
-            for (frame_num, buffer) in buffers.try_iter()?.enumerate() {
+            for (frame_num, buffer) in frames.try_iter()?.enumerate() {
                 let frame: PyBuffer<u8> = PyBuffer::get(&buffer?)?;
                 match render_request.get_source_frame(frame_num) {
                     Ok(source) => frame.copy_from_slice(py, source)?,
