@@ -16,18 +16,25 @@ jobs:
       - uses: actions/checkout@v4
       - name: rustup
         run: rustup update stable
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: "3.12"
+          version: "0.7.4"
       - name: Lint
         run: |
-          cargo fmt -- --check
-          cargo clippy -- -D warnings
+          uv run --project clients/mediafx-py cargo fmt -- --check
+          uv run --project clients/mediafx-py cargo clippy -- -D warnings
+
+          cd clients/mediafx-py
+          uv sync
+          uv run ruff check
+          uv run ruff format --check
+          uv run mypy
       - name: Build
-        run: cargo build --all-targets --verbose
+        run: |
+          uv run --project clients/mediafx-py cargo build --all-targets --verbose
       - name: Run tests
-        run: cargo test --verbose
+        run: uv run --project clients/mediafx-py cargo test --verbose
       - name: Install ffmpeg
         run: |
           if [ "$RUNNER_OS" == "Linux" ]; then
@@ -49,8 +56,18 @@ jobs:
           # https://github.com/rust-lang/cargo/issues/1970
           if [ "$RUNNER_OS" == "Windows" ]; then
             PLUGINPREFIX=""
+            PYSUFFIX=cmd
+            echo -e "@echo off\n\rpython clients/mediafx-py/python/tests/color.py" > clients/mediafx-py/python/tests/color.cmd
+            echo -e "@echo off\n\rpython clients/mediafx-py/python/tests/shift.py" > clients/mediafx-py/python/tests/shift.cmd
+            source clients/mediafx-py/.venv/Scripts/activate
           else
             PLUGINPREFIX=lib
+            PYSUFFIX=py
+            source clients/mediafx-py/.venv/bin/activate
           fi
+
           ffmpeg -f lavfi -i 'testsrc=duration=2:size=640x360:rate=30:decimals=2,drawbox=color=red:t=ih/16' -vf "frei0r=filter_name=${PLUGINPREFIX}mediafx_filter:filter_params=target/debug/examples/shift" -y frei0r_shift.mp4
           ffmpeg -f lavfi -i "frei0r_src=size=640x360:framerate=30:filter_name=${PLUGINPREFIX}mediafx_source:filter_params=target/debug/examples/color" -t 2 -y frei0r_color.mp4
+
+          ffmpeg -f lavfi -i 'testsrc=duration=2:size=640x360:rate=30:decimals=2,drawbox=color=red:t=ih/16' -vf "frei0r=filter_name=${PLUGINPREFIX}mediafx_filter:filter_params=clients/mediafx-py/python/tests/shift.${PYSUFFIX}" -y python_shift.mp4
+          ffmpeg -f lavfi -i "frei0r_src=size=640x360:framerate=30:filter_name=${PLUGINPREFIX}mediafx_source:filter_params=clients/mediafx-py/python/tests/color.${PYSUFFIX}" -t 2 -y python_color.mp4

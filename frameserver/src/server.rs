@@ -3,7 +3,6 @@
 
 use std::{
     error::Error,
-    ffi::OsStr,
     process::{Child, ChildStdin, ChildStdout, Command, Stdio},
 };
 
@@ -22,8 +21,8 @@ pub struct FrameServer {
 }
 
 impl FrameServer {
-    pub fn new<S: AsRef<OsStr>>(
-        client_path: S,
+    pub fn new(
+        client_path: &str,
         width: u32,
         height: u32,
         count: usize,
