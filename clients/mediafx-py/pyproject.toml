@@ -1,5 +1,6 @@
 [project]
 name = "mediafx"
+authors = [{ name = "Andrew Wason", email = "rectalogic@rectalogic.com" }]
 requires-python = ">=3.12"
 classifiers = [
     "Programming Language :: Rust",
@@ -12,9 +13,53 @@ dynamic = ["version"]
 requires = ["maturin>=1.8,<2.0"]
 build-backend = "maturin"
 
+[dependency-groups]
+dev = ["maturin>=1.8,<2.0"]
+
 [project.optional-dependencies]
 tests = ["pytest"]
 
 [tool.maturin]
 python-source = "python"
+module-name = "mediafx._mediafx"
 features = ["pyo3/extension-module"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint]
+select = [
+    # flake8-2020
+    "YTT",
+    # flake8-bandit
+    "S",
+    # flake8-bugbear
+    "B",
+    # flake8-builtins
+    "A",
+    # Pyflakes
+    "F",
+    # Pycodestyle
+    "E",
+    "W",
+    # isort
+    "I",
+    # flake8-no-pep420
+    "INP",
+    # pyupgrade
+    "UP",
+]
+
+[tool.mypy]
+disallow_untyped_defs = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+strict_equality = true
+no_implicit_optional = true
+show_error_codes = true
+files = "python/**/*.py"
