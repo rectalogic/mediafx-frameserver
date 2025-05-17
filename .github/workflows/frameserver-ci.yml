@@ -56,9 +56,9 @@ jobs:
           # https://github.com/rust-lang/cargo/issues/1970
           if [ "$RUNNER_OS" == "Windows" ]; then
             PLUGINPREFIX=""
-            PYSUFFIX=bat
-            echo "python clients/mediafx-py/python/tests/color.py" > clients/mediafx-py/python/tests/color.bat
-            echo "python clients/mediafx-py/python/tests/shift.py" > clients/mediafx-py/python/tests/shift.bat
+            PYSUFFIX=cmd
+            echo "python clients/mediafx-py/python/tests/color.py" > clients/mediafx-py/python/tests/color.cmd
+            echo "python clients/mediafx-py/python/tests/shift.py" > clients/mediafx-py/python/tests/shift.cmd
           else
             PLUGINPREFIX=lib
             PYSUFFIX=py
