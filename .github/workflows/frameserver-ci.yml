@@ -57,12 +57,8 @@ jobs:
           if [ "$RUNNER_OS" == "Windows" ]; then
             PLUGINPREFIX=""
             PYSUFFIX=bat
-            cat > clients/mediafx-py/python/tests/color.bat <<-EOF
-            python clients/mediafx-py/python/tests/color.py
-            EOF
-            cat > clients/mediafx-py/python/tests/shift.bat <<-EOF
-            python clients/mediafx-py/python/tests/shift.py
-            EOF
+            echo "python clients/mediafx-py/python/tests/color.py" > clients/mediafx-py/python/tests/color.bat
+            echo "python clients/mediafx-py/python/tests/shift.py" > clients/mediafx-py/python/tests/shift.bat
           else
             PLUGINPREFIX=lib
             PYSUFFIX=py
