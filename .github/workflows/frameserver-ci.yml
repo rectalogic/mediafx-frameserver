@@ -59,7 +59,7 @@ jobs:
             PYSUFFIX=cmd
             echo "python clients/mediafx-py/python/tests/color.py" > clients/mediafx-py/python/tests/color.cmd
             echo "python clients/mediafx-py/python/tests/shift.py" > clients/mediafx-py/python/tests/shift.cmd
-            clients/mediafx-py/.venv/Scripts/activate
+            source clients/mediafx-py/.venv/Scripts/activate
           else
             PLUGINPREFIX=lib
             PYSUFFIX=py
