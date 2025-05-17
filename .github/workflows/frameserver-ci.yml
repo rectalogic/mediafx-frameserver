@@ -59,11 +59,12 @@ jobs:
             PYSUFFIX=cmd
             echo "python clients/mediafx-py/python/tests/color.py" > clients/mediafx-py/python/tests/color.cmd
             echo "python clients/mediafx-py/python/tests/shift.py" > clients/mediafx-py/python/tests/shift.cmd
+            clients/mediafx-py/.venv/Scripts/activate
           else
             PLUGINPREFIX=lib
             PYSUFFIX=py
+            source clients/mediafx-py/.venv/bin/activate
           fi
-          source clients/mediafx-py/.venv/bin/activate
 
           ffmpeg -f lavfi -i 'testsrc=duration=2:size=640x360:rate=30:decimals=2,drawbox=color=red:t=ih/16' -vf "frei0r=filter_name=${PLUGINPREFIX}mediafx_filter:filter_params=target/debug/examples/shift" -y frei0r_shift.mp4
           ffmpeg -f lavfi -i "frei0r_src=size=640x360:framerate=30:filter_name=${PLUGINPREFIX}mediafx_source:filter_params=target/debug/examples/color" -t 2 -y frei0r_color.mp4
