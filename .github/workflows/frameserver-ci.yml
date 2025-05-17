@@ -63,9 +63,10 @@ jobs:
             PLUGINPREFIX=lib
             PYSUFFIX=py
           fi
+          source clients/mediafx-py/.venv/bin/activate
 
           ffmpeg -f lavfi -i 'testsrc=duration=2:size=640x360:rate=30:decimals=2,drawbox=color=red:t=ih/16' -vf "frei0r=filter_name=${PLUGINPREFIX}mediafx_filter:filter_params=target/debug/examples/shift" -y frei0r_shift.mp4
           ffmpeg -f lavfi -i "frei0r_src=size=640x360:framerate=30:filter_name=${PLUGINPREFIX}mediafx_source:filter_params=target/debug/examples/color" -t 2 -y frei0r_color.mp4
 
-          uv run --project clients/mediafx-py ffmpeg -f lavfi -i 'testsrc=duration=2:size=640x360:rate=30:decimals=2,drawbox=color=red:t=ih/16' -vf "frei0r=filter_name=${PLUGINPREFIX}mediafx_filter:filter_params=clients/mediafx-py/python/tests/shift.${PYSUFFIX}" -y python_shift.mp4
-          uv run --project clients/mediafx-py ffmpeg -f lavfi -i "frei0r_src=size=640x360:framerate=30:filter_name=${PLUGINPREFIX}mediafx_source:filter_params=clients/mediafx-py/python/tests/color.${PYSUFFIX}" -t 2 -y python_color.mp4
+          ffmpeg -f lavfi -i 'testsrc=duration=2:size=640x360:rate=30:decimals=2,drawbox=color=red:t=ih/16' -vf "frei0r=filter_name=${PLUGINPREFIX}mediafx_filter:filter_params=clients/mediafx-py/python/tests/shift.${PYSUFFIX}" -y python_shift.mp4
+          ffmpeg -f lavfi -i "frei0r_src=size=640x360:framerate=30:filter_name=${PLUGINPREFIX}mediafx_source:filter_params=clients/mediafx-py/python/tests/color.${PYSUFFIX}" -t 2 -y python_color.mp4
