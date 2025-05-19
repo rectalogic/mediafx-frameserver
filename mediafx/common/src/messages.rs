@@ -43,7 +43,7 @@ impl RenderInitialize {
 
 const BINCODE_CONFIG: bincode::config::Configuration = bincode::config::standard();
 
-pub(crate) fn send_message<E: Encode, W: Write>(
+pub fn send_message<E: Encode, W: Write>(
     message: E,
     writer: &mut W,
 ) -> Result<usize, Box<dyn Error>> {
@@ -52,7 +52,7 @@ pub(crate) fn send_message<E: Encode, W: Write>(
     Ok(result)
 }
 
-pub(crate) fn receive_message<D: Decode<()>, R: Read>(
+pub fn receive_message<D: Decode<()>, R: Read>(
     reader: &mut R,
 ) -> Result<D, bincode::error::DecodeError> {
     bincode::decode_from_std_read(reader, BINCODE_CONFIG)

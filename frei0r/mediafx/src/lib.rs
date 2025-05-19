@@ -7,22 +7,22 @@ use std::{
     marker::PhantomData,
 };
 
-pub use frameserver;
 pub use frei0r_rs;
+pub use mediafx_server;
 
 #[derive(frei0r_rs::PluginBase)]
-pub struct FrameServerPlugin<K: frei0r_rs::PluginKind> {
+pub struct MediaFXServerPlugin<K: frei0r_rs::PluginKind> {
     #[frei0r(explain = c"Frameserver client executable path")]
     client_path: CString,
     width: u32,
     height: u32,
     frame_count: usize,
-    frame_server: Option<frameserver::server::FrameServer>,
+    frame_server: Option<mediafx_server::MediaFXServer>,
     frame_server_initialized: bool,
     _phantom: PhantomData<K>,
 }
 
-impl<K> FrameServerPlugin<K>
+impl<K> MediaFXServerPlugin<K>
 where
     K: frei0r_rs::PluginKind,
 {
@@ -38,7 +38,7 @@ where
         }
     }
 
-    fn frame_server(&mut self) -> Option<&mut frameserver::server::FrameServer> {
+    fn frame_server(&mut self) -> Option<&mut mediafx_server::MediaFXServer> {
         if self.frame_server_initialized {
             return self.frame_server.as_mut();
         }
@@ -54,7 +54,7 @@ where
                     }
                 };
 
-                match frameserver::server::FrameServer::new(
+                match mediafx_server::MediaFXServer::new(
                     client_path,
                     self.width,
                     self.height,
@@ -152,39 +152,39 @@ fn slice_to_bytes(slice: &[u32]) -> &[u8] {
     unsafe { std::slice::from_raw_parts(slice.as_ptr().cast::<u8>(), size_of_val(slice)) }
 }
 
-trait FrameServerType {
+trait ServerType {
     const NAME: &'static CStr;
     const EXPLANATION: &'static CStr;
     const FRAME_COUNT: usize;
 }
 
-impl FrameServerType for frei0r_rs::KindSource {
+impl ServerType for frei0r_rs::KindSource {
     const NAME: &'static CStr = c"Frameserver source";
     const EXPLANATION: &'static CStr = c"Handles source plugin clients";
     const FRAME_COUNT: usize = 0;
 }
 
-impl FrameServerType for frei0r_rs::KindFilter {
+impl ServerType for frei0r_rs::KindFilter {
     const NAME: &'static CStr = c"Frameserver filter";
     const EXPLANATION: &'static CStr = c"Handles filter plugin clients";
     const FRAME_COUNT: usize = 1;
 }
 
-impl FrameServerType for frei0r_rs::KindMixer2 {
+impl ServerType for frei0r_rs::KindMixer2 {
     const NAME: &'static CStr = c"Frameserver mixer2";
     const EXPLANATION: &'static CStr = c"Handles mixer2 plugin clients";
     const FRAME_COUNT: usize = 2;
 }
 
-impl FrameServerType for frei0r_rs::KindMixer3 {
+impl ServerType for frei0r_rs::KindMixer3 {
     const NAME: &'static CStr = c"Frameserver mixer3";
     const EXPLANATION: &'static CStr = c"Handles mixer3 plugin clients";
     const FRAME_COUNT: usize = 3;
 }
 
-impl<K> frei0r_rs::Plugin for FrameServerPlugin<K>
+impl<K> frei0r_rs::Plugin for MediaFXServerPlugin<K>
 where
-    K: frei0r_rs::PluginKind + FrameServerType,
+    K: frei0r_rs::PluginKind + ServerType,
 {
     type Kind = K;
 
@@ -200,11 +200,11 @@ where
     }
 
     fn new(width: usize, height: usize) -> Self {
-        FrameServerPlugin::new(width as u32, height as u32, K::FRAME_COUNT)
+        MediaFXServerPlugin::new(width as u32, height as u32, K::FRAME_COUNT)
     }
 }
 
-impl frei0r_rs::FilterPlugin for FrameServerPlugin<frei0r_rs::KindFilter> {
+impl frei0r_rs::FilterPlugin for MediaFXServerPlugin<frei0r_rs::KindFilter> {
     fn update_filter(&mut self, time: f64, inframe: &[u32], outframe: &mut [u32]) {
         if let Err(e) = self.filter(time, inframe, outframe) {
             debug_assert!(false, "Failed to filter frame: {}", e);
@@ -214,7 +214,7 @@ impl frei0r_rs::FilterPlugin for FrameServerPlugin<frei0r_rs::KindFilter> {
     }
 }
 
-impl frei0r_rs::SourcePlugin for FrameServerPlugin<frei0r_rs::KindSource> {
+impl frei0r_rs::SourcePlugin for MediaFXServerPlugin<frei0r_rs::KindSource> {
     fn update_source(&mut self, time: f64, outframe: &mut [u32]) {
         if let Err(e) = self.source(time, outframe) {
             debug_assert!(false, "Failed to source frame: {}", e);
@@ -224,7 +224,7 @@ impl frei0r_rs::SourcePlugin for FrameServerPlugin<frei0r_rs::KindSource> {
     }
 }
 
-impl frei0r_rs::Mixer2Plugin for FrameServerPlugin<frei0r_rs::KindMixer2> {
+impl frei0r_rs::Mixer2Plugin for MediaFXServerPlugin<frei0r_rs::KindMixer2> {
     fn update_mixer2(
         &mut self,
         time: f64,
@@ -240,7 +240,7 @@ impl frei0r_rs::Mixer2Plugin for FrameServerPlugin<frei0r_rs::KindMixer2> {
     }
 }
 
-impl frei0r_rs::Mixer3Plugin for FrameServerPlugin<frei0r_rs::KindMixer3> {
+impl frei0r_rs::Mixer3Plugin for MediaFXServerPlugin<frei0r_rs::KindMixer3> {
     fn update_mixer3(
         &mut self,
         time: f64,

@@ -111,14 +111,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "48c757948c5ede0e46177b7add2e67155f70e33c07fea8284df6576da70b3719"
 
 [[package]]
-name = "frameserver"
-version = "0.1.1"
-dependencies = [
- "bincode",
- "shared_memory",
-]
-
-[[package]]
 name = "frei0r-macros"
 version = "1.0.0"
 source = "git+https://github.com/rectalogic/frei0r-rs.git?branch=updates#c97907231fc5acb83fc3425aa3445d1a10a5acb1"
@@ -206,47 +198,80 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13dc2df351e3202783a1fe0d44375f7295ffb4049267b0f3018346dc122a1d94"
 
 [[package]]
-name = "mediafx"
-version = "0.1.1"
-dependencies = [
- "frameserver",
- "frei0r-rs",
-]
-
-[[package]]
 name = "mediafx-py"
 version = "0.1.1"
 dependencies = [
- "frameserver",
+ "mediafx_client",
  "pyo3",
+]
+
+[[package]]
+name = "mediafx_client"
+version = "0.1.1"
+dependencies = [
+ "mediafx_common",
+ "shared_memory",
+]
+
+[[package]]
+name = "mediafx_common"
+version = "0.1.1"
+dependencies = [
+ "bincode",
+ "shared_memory",
 ]
 
 [[package]]
 name = "mediafx_filter"
 version = "0.1.1"
 dependencies = [
- "mediafx",
+ "mediafx_frei0r",
+]
+
+[[package]]
+name = "mediafx_frei0r"
+version = "0.1.1"
+dependencies = [
+ "frei0r-rs",
+ "mediafx_client",
+ "mediafx_server",
 ]
 
 [[package]]
 name = "mediafx_mixer2"
 version = "0.1.1"
 dependencies = [
- "mediafx",
+ "mediafx_frei0r",
 ]
 
 [[package]]
 name = "mediafx_mixer3"
 version = "0.1.1"
 dependencies = [
- "mediafx",
+ "mediafx_frei0r",
+]
+
+[[package]]
+name = "mediafx_server"
+version = "0.1.1"
+dependencies = [
+ "mediafx_common",
+ "shared_memory",
 ]
 
 [[package]]
 name = "mediafx_source"
 version = "0.1.1"
 dependencies = [
- "mediafx",
+ "mediafx_frei0r",
+]
+
+[[package]]
+name = "mediafx_tests"
+version = "0.1.1"
+dependencies = [
+ "mediafx_client",
+ "mediafx_server",
 ]
 
 [[package]]

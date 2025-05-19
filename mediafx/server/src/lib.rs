@@ -8,19 +8,19 @@ use std::{
 
 use shared_memory::ShmemConf;
 
-use crate::{
+use mediafx_common::{
     context::{RenderContext, RenderSize},
     messages::{RenderAck, RenderFrame, RenderInitialize, receive_message, send_message},
 };
 
-pub struct FrameServer {
+pub struct MediaFXServer {
     context: RenderContext,
     client: Child,
     client_stdin: ChildStdin,
     client_stdout: ChildStdout,
 }
 
-impl FrameServer {
+impl MediaFXServer {
     pub fn new(
         client_path: &str,
         width: u32,
@@ -48,7 +48,7 @@ impl FrameServer {
         send_message(&render_initialize, &mut client_stdin)?;
         // XXX check for errors
         let _response: RenderAck = receive_message(&mut client_stdout)?;
-        Ok(FrameServer {
+        Ok(MediaFXServer {
             context,
             client,
             client_stdin,
@@ -68,7 +68,7 @@ impl FrameServer {
     }
 }
 
-impl Drop for FrameServer {
+impl Drop for MediaFXServer {
     fn drop(&mut self) {
         if send_message(RenderFrame::Terminate, &mut self.client_stdin).is_err() {
             let _ = self.client.kill();

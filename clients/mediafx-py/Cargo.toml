@@ -10,7 +10,7 @@ name = "_mediafx"
 crate-type = ["cdylib"]
 
 [dependencies]
-frameserver = { path = "../../frameserver" }
+mediafx_client = { path = "../../mediafx/client" }
 
 [dependencies.pyo3]
 version = "0.25"

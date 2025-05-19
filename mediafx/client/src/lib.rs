@@ -5,19 +5,19 @@ use std::error::Error;
 
 use shared_memory::ShmemConf;
 
-pub use crate::context::{BYTES_PER_PIXEL, RenderSize};
-use crate::{
+pub use mediafx_common::context::{BYTES_PER_PIXEL, RenderSize};
+use mediafx_common::{
     context::RenderContext,
     messages::{RenderAck, RenderFrame, RenderInitialize, receive_message, send_message},
 };
 #[derive(Debug)]
-pub struct FrameClient {
+pub struct MediaFXClient {
     stdin: std::io::Stdin,
     stdout: std::io::Stdout,
     context: RenderContext,
 }
 
-impl FrameClient {
+impl MediaFXClient {
     pub fn new() -> Result<Self, Box<dyn Error>> {
         let mut stdin = std::io::stdin();
         let mut stdout = std::io::stdout();
@@ -28,7 +28,7 @@ impl FrameClient {
         send_message(RenderAck::default(), &mut stdout)?;
         let context = RenderContext::new(*render_initialize.size(), shmem);
 
-        Ok(FrameClient {
+        Ok(MediaFXClient {
             stdin,
             stdout,
             context,
@@ -54,7 +54,7 @@ impl FrameClient {
 
 #[derive(Debug)]
 pub struct RenderRequest {
-    frame_client: FrameClient,
+    frame_client: MediaFXClient,
     time: f64,
 }
 
@@ -76,7 +76,7 @@ impl RenderRequest {
     }
 
     #[allow(clippy::result_large_err)]
-    pub fn render_complete(mut self) -> Result<FrameClient, (Self, Box<dyn Error>)> {
+    pub fn render_complete(mut self) -> Result<MediaFXClient, (Self, Box<dyn Error>)> {
         match send_message(RenderAck::default(), &mut self.frame_client.stdout) {
             Ok(_) => Ok(self.frame_client),
             Err(err) => Err((self, err)),

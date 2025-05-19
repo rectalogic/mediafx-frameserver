@@ -1,11 +1,11 @@
 // Copyright (C) 2025 Andrew Wason
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use frameserver::client::{BYTES_PER_PIXEL, FrameClient, RenderRequest, RenderSize};
+use mediafx_client::{BYTES_PER_PIXEL, MediaFXClient, RenderRequest, RenderSize};
 use pyo3::{buffer::PyBuffer, exceptions::PyRuntimeError, prelude::*, types::PySequence};
 
 enum State {
-    FrameClient(FrameClient),
+    MediaFXClient(MediaFXClient),
     RenderRequest(RenderRequest),
 }
 
@@ -18,8 +18,8 @@ struct MediaFX {
 impl MediaFX {
     #[new]
     fn new() -> PyResult<Self> {
-        let state = match FrameClient::new() {
-            Ok(client) => State::FrameClient(client),
+        let state = match MediaFXClient::new() {
+            Ok(client) => State::MediaFXClient(client),
             Err(err) => return Err(PyRuntimeError::new_err(err.to_string())),
         };
         Ok(MediaFX { state: Some(state) })
@@ -47,7 +47,7 @@ impl MediaFX {
     fn render_begin(&mut self, frames: Option<&Bound<PySequence>>) -> PyResult<f64> {
         let current_state = self.state.take().expect("Invalid internal state");
         match current_state {
-            State::FrameClient(client) => match client.request_render() {
+            State::MediaFXClient(client) => match client.request_render() {
                 Ok(render_request) => {
                     let time = render_request.time();
                     if let Some(buffers) = frames {
@@ -57,7 +57,7 @@ impl MediaFX {
                     Ok(time)
                 }
                 Err((client, err)) => {
-                    self.state = Some(State::FrameClient(client));
+                    self.state = Some(State::MediaFXClient(client));
                     Err(PyRuntimeError::new_err(err.to_string()))
                 }
             },
@@ -89,7 +89,7 @@ impl MediaFX {
 
                 match render_request.render_complete() {
                     Ok(client) => {
-                        self.state = Some(State::FrameClient(client));
+                        self.state = Some(State::MediaFXClient(client));
                         Ok(())
                     }
                     Err((render_request, err)) => {
@@ -98,8 +98,8 @@ impl MediaFX {
                     }
                 }
             }
-            State::FrameClient(client) => {
-                self.state = Some(State::FrameClient(client));
+            State::MediaFXClient(client) => {
+                self.state = Some(State::MediaFXClient(client));
                 Err(PyRuntimeError::new_err("Invalid state"))
             }
         }
@@ -109,7 +109,7 @@ impl MediaFX {
 impl MediaFX {
     fn get_size(&self) -> RenderSize {
         match self.state {
-            Some(State::FrameClient(ref client)) => client.render_size(),
+            Some(State::MediaFXClient(ref client)) => client.render_size(),
             Some(State::RenderRequest(ref client)) => client.render_size(),
             None => unreachable!(),
         }

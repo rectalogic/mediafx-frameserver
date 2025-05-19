@@ -7,7 +7,7 @@ use std::{error::Error, ops::Range};
 
 pub const BYTES_PER_PIXEL: usize = 4;
 
-pub(crate) struct RenderContext {
+pub struct RenderContext {
     size: RenderSize,
     shmem: Shmem,
 }

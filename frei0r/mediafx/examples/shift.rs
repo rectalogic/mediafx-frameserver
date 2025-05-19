@@ -1,13 +1,11 @@
 // Copyright (C) 2025 Andrew Wason
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use mediafx::frameserver::client;
-
 // XXX need to forward params to client
 const XSHIFT: f32 = 0.5;
 const YSHIFT: f32 = 0.25;
 
-fn filter_frame(frame_client: client::FrameClient) -> client::FrameClient {
+fn filter_frame(frame_client: mediafx_client::MediaFXClient) -> mediafx_client::MediaFXClient {
     let size = frame_client.render_size();
     let mut request = frame_client.request_render().unwrap();
 
@@ -30,7 +28,7 @@ fn filter_frame(frame_client: client::FrameClient) -> client::FrameClient {
 }
 
 fn main() {
-    let mut frame_client = client::FrameClient::new().unwrap();
+    let mut frame_client = mediafx_client::MediaFXClient::new().unwrap();
     loop {
         frame_client = filter_frame(frame_client);
     }

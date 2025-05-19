@@ -1,12 +1,10 @@
 // Copyright (C) 2025 Andrew Wason
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use mediafx::frameserver::client;
-
 // XXX need to forward params to client
 const COLOR: [u8; 4] = [255, 0, 0, 255];
 
-fn source_frame(frame_client: client::FrameClient) -> client::FrameClient {
+fn source_frame(frame_client: mediafx_client::MediaFXClient) -> mediafx_client::MediaFXClient {
     let size = frame_client.render_size();
     let mut request = frame_client.request_render().unwrap();
 
@@ -25,7 +23,7 @@ fn source_frame(frame_client: client::FrameClient) -> client::FrameClient {
 }
 
 fn main() {
-    let mut frame_client = client::FrameClient::new().unwrap();
+    let mut frame_client = mediafx_client::MediaFXClient::new().unwrap();
     loop {
         frame_client = source_frame(frame_client);
     }
