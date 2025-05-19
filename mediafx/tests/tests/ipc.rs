@@ -13,14 +13,14 @@ fn fill_frame(frame: &mut [u8], value: u8) {
 fn server_render_frame(frame_server: &mut mediafx_server::MediaFXServer, num: u8) {
     fill_frame(frame_server.get_source_frame_mut(0).unwrap(), num);
     fill_frame(frame_server.get_source_frame_mut(1).unwrap(), num + 1);
-    let rendered_frame = frame_server.render(0.0).unwrap();
+    let rendered_frame = frame_server.render((0.0, 0.0, 0.0, 0.0)).unwrap();
     let expected_frame = vec![num + num + 1; (WIDTH * HEIGHT * 4) as usize];
     assert_eq!(rendered_frame, &expected_frame);
 }
 
 fn frame_server(client_path: &str) {
     let mut frame_server =
-        mediafx_server::MediaFXServer::new(client_path, WIDTH, HEIGHT, 2).unwrap();
+        mediafx_server::MediaFXServer::new(client_path, "config", WIDTH, HEIGHT, 2).unwrap();
     for num in 1..10 {
         server_render_frame(&mut frame_server, num);
     }
@@ -44,6 +44,7 @@ fn client_render_frame(
 
 fn frame_client() {
     let mut frame_client = mediafx_client::MediaFXClient::new().unwrap();
+    assert_eq!(frame_client.config(), "config");
     loop {
         frame_client = client_render_frame(frame_client);
     }

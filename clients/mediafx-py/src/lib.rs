@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Andrew Wason
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use mediafx_client::{BYTES_PER_PIXEL, MediaFXClient, RenderRequest, RenderSize};
+use mediafx_client::{BYTES_PER_PIXEL, MediaFXClient, RenderData, RenderRequest, RenderSize};
 use pyo3::{buffer::PyBuffer, exceptions::PyRuntimeError, prelude::*, types::PySequence};
 
 enum State {
@@ -26,6 +26,12 @@ impl MediaFX {
     }
 
     #[getter]
+    fn get_config(&self) -> PyResult<&str> {
+        let config = self.get_config_internal();
+        Ok(config)
+    }
+
+    #[getter]
     fn get_frame_bytecount(&self) -> PyResult<usize> {
         let size = self.get_size();
         Ok((size.width() * size.height()) as usize * BYTES_PER_PIXEL)
@@ -44,17 +50,17 @@ impl MediaFX {
     }
 
     #[pyo3(signature = (frames=None))]
-    fn render_begin(&mut self, frames: Option<&Bound<PySequence>>) -> PyResult<f64> {
+    fn render_begin(&mut self, frames: Option<&Bound<PySequence>>) -> PyResult<RenderData> {
         let current_state = self.state.take().expect("Invalid internal state");
         match current_state {
             State::MediaFXClient(client) => match client.request_render() {
                 Ok(render_request) => {
-                    let time = render_request.time();
+                    let render_data = *render_request.render_data();
                     if let Some(buffers) = frames {
                         self.copy_source_frames(&render_request, buffers)?;
                     }
                     self.state = Some(State::RenderRequest(render_request));
-                    Ok(time)
+                    Ok(render_data)
                 }
                 Err((client, err)) => {
                     self.state = Some(State::MediaFXClient(client));
@@ -62,7 +68,7 @@ impl MediaFX {
                 }
             },
             State::RenderRequest(render_request) => {
-                let time = render_request.time();
+                let time = *render_request.render_data();
                 if let Some(buffers) = frames {
                     self.copy_source_frames(&render_request, buffers)?;
                 }
@@ -111,6 +117,14 @@ impl MediaFX {
         match self.state {
             Some(State::MediaFXClient(ref client)) => client.render_size(),
             Some(State::RenderRequest(ref client)) => client.render_size(),
+            None => unreachable!(),
+        }
+    }
+
+    fn get_config_internal(&self) -> &str {
+        match self.state {
+            Some(State::MediaFXClient(ref client)) => client.config(),
+            Some(State::RenderRequest(ref client)) => client.config(),
             None => unreachable!(),
         }
     }

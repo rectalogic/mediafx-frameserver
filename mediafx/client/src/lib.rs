@@ -6,15 +6,18 @@ use std::error::Error;
 use shared_memory::ShmemConf;
 
 pub use mediafx_common::context::{BYTES_PER_PIXEL, RenderSize};
+pub use mediafx_common::messages::RenderData;
 use mediafx_common::{
     context::RenderContext,
     messages::{RenderAck, RenderFrame, RenderInitialize, receive_message, send_message},
 };
+
 #[derive(Debug)]
 pub struct MediaFXClient {
     stdin: std::io::Stdin,
     stdout: std::io::Stdout,
     context: RenderContext,
+    config: String,
 }
 
 impl MediaFXClient {
@@ -32,7 +35,12 @@ impl MediaFXClient {
             stdin,
             stdout,
             context,
+            config: render_initialize.config().into(),
         })
+    }
+
+    pub fn config(&self) -> &str {
+        &self.config
     }
 
     pub fn render_size(&self) -> RenderSize {
@@ -43,9 +51,9 @@ impl MediaFXClient {
     pub fn request_render(mut self) -> Result<RenderRequest, (Self, Box<dyn Error>)> {
         match receive_message(&mut self.stdin) {
             Ok(RenderFrame::Terminate) => std::process::exit(0),
-            Ok(RenderFrame::Render(time)) => Ok(RenderRequest {
+            Ok(RenderFrame::Render(render_data)) => Ok(RenderRequest {
                 frame_client: self,
-                time,
+                render_data,
             }),
             Err(err) => Err((self, Box::new(err))),
         }
@@ -55,12 +63,16 @@ impl MediaFXClient {
 #[derive(Debug)]
 pub struct RenderRequest {
     frame_client: MediaFXClient,
-    time: f64,
+    render_data: RenderData,
 }
 
 impl RenderRequest {
-    pub fn time(&self) -> f64 {
-        self.time
+    pub fn render_data(&self) -> &RenderData {
+        &self.render_data
+    }
+
+    pub fn config(&self) -> &str {
+        &self.frame_client.config
     }
 
     pub fn render_size(&self) -> RenderSize {

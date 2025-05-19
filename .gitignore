@@ -1,4 +1,6 @@
 /target
+clients/mediafx-py/.mypy_cache/
+clients/mediafx-py/.ruff_cache/
 clients/mediafx-py/**/.venv/
 clients/mediafx-py/**/*.so
 clients/mediafx-py/**/__pycache__/

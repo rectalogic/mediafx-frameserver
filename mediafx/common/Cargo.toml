@@ -6,5 +6,5 @@ license.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-bincode = "2.0.1"
-shared_memory = "0.12.4"
+bincode = "2.0"
+shared_memory = "0.12"

@@ -8,12 +8,20 @@ use std::{
 };
 
 pub use frei0r_rs;
-pub use mediafx_server;
+use mediafx_server::RenderData;
 
 #[derive(frei0r_rs::PluginBase)]
 pub struct MediaFXServerPlugin<K: frei0r_rs::PluginKind> {
     #[frei0r(explain = c"Frameserver client executable path")]
     client_path: CString,
+    #[frei0r(explain = c"Frameserver client configuration data")]
+    config: CString,
+    #[frei0r(explain = c"Frameserver client specific parameter 1")]
+    param1: f64,
+    #[frei0r(explain = c"Frameserver client specific parameter 2")]
+    param2: f64,
+    #[frei0r(explain = c"Frameserver client specific parameter 3")]
+    param3: f64,
     width: u32,
     height: u32,
     frame_count: usize,
@@ -31,11 +39,19 @@ where
             width,
             height,
             client_path: c"".to_owned(),
+            config: c"".to_owned(),
+            param1: 0.,
+            param2: 0.,
+            param3: 0.,
             frame_count,
             frame_server: None,
             frame_server_initialized: false,
             _phantom: PhantomData,
         }
+    }
+
+    fn params(&self, time: f64) -> RenderData {
+        (time, self.param1, self.param2, self.param3)
     }
 
     fn frame_server(&mut self) -> Option<&mut mediafx_server::MediaFXServer> {
@@ -53,9 +69,17 @@ where
                         return None;
                     }
                 };
-
+                let client_config = match self.config.to_str() {
+                    Ok(client_config) => client_config,
+                    Err(e) => {
+                        debug_assert!(false, "Failed to parse client_config: {}", e);
+                        eprintln!("Failed to parse client_config: {}", e);
+                        return None;
+                    }
+                };
                 match mediafx_server::MediaFXServer::new(
                     client_path,
+                    client_config,
                     self.width,
                     self.height,
                     self.frame_count,
@@ -76,8 +100,9 @@ where
     }
 
     pub fn source(&mut self, time: f64, outframe: &mut [u32]) -> Result<(), Box<dyn Error>> {
+        let params = self.params(time);
         if let Some(frame_server) = self.frame_server() {
-            let rendered_frame = frame_server.render(time)?;
+            let rendered_frame = frame_server.render(params)?;
             slice_to_bytes_mut(outframe).copy_from_slice(rendered_frame);
         }
         Ok(())
@@ -89,11 +114,12 @@ where
         inframe: &[u32],
         outframe: &mut [u32],
     ) -> Result<(), Box<dyn Error>> {
+        let params = self.params(time);
         if let Some(frame_server) = self.frame_server() {
             frame_server
                 .get_source_frame_mut(0)?
                 .copy_from_slice(slice_to_bytes(inframe));
-            let rendered_frame = frame_server.render(time)?;
+            let rendered_frame = frame_server.render(params)?;
             slice_to_bytes_mut(outframe).copy_from_slice(rendered_frame);
         }
         Ok(())
@@ -106,6 +132,7 @@ where
         inframe2: &[u32],
         outframe: &mut [u32],
     ) -> Result<(), Box<dyn Error>> {
+        let params = self.params(time);
         if let Some(frame_server) = self.frame_server() {
             frame_server
                 .get_source_frame_mut(0)?
@@ -113,7 +140,7 @@ where
             frame_server
                 .get_source_frame_mut(1)?
                 .copy_from_slice(slice_to_bytes(inframe2));
-            let rendered_frame = frame_server.render(time)?;
+            let rendered_frame = frame_server.render(params)?;
             slice_to_bytes_mut(outframe).copy_from_slice(rendered_frame);
         }
         Ok(())
@@ -127,6 +154,7 @@ where
         inframe3: &[u32],
         outframe: &mut [u32],
     ) -> Result<(), Box<dyn Error>> {
+        let params = self.params(time);
         if let Some(frame_server) = self.frame_server() {
             frame_server
                 .get_source_frame_mut(0)?
@@ -137,7 +165,7 @@ where
             frame_server
                 .get_source_frame_mut(2)?
                 .copy_from_slice(slice_to_bytes(inframe3));
-            let rendered_frame = frame_server.render(time)?;
+            let rendered_frame = frame_server.render(params)?;
             slice_to_bytes_mut(outframe).copy_from_slice(rendered_frame);
         }
         Ok(())

@@ -3,3 +3,4 @@
 
 pub mod context;
 pub mod messages;
+pub use bincode;

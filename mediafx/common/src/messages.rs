@@ -14,6 +14,7 @@ use crate::context::RenderSize;
 pub struct RenderInitialize {
     size: RenderSize,
     shmem_id: String,
+    config: String,
 }
 
 #[derive(Encode, Decode, Debug, Default)]
@@ -21,15 +22,21 @@ pub struct RenderAck {
     error: Option<String>,
 }
 
+pub type RenderData = (f64, f64, f64, f64);
+
 #[derive(Encode, Decode, Debug)]
 pub enum RenderFrame {
-    Render(f64),
+    Render(RenderData),
     Terminate,
 }
 
 impl RenderInitialize {
-    pub fn new(size: RenderSize, shmem_id: String) -> Self {
-        RenderInitialize { size, shmem_id }
+    pub fn new(size: RenderSize, shmem_id: String, config: String) -> Self {
+        RenderInitialize {
+            size,
+            shmem_id,
+            config,
+        }
     }
 
     pub fn size(&self) -> &RenderSize {
@@ -38,6 +45,10 @@ impl RenderInitialize {
 
     pub fn shmem_id(&self) -> &str {
         &self.shmem_id
+    }
+
+    pub fn config(&self) -> &str {
+        &self.config
     }
 }
 

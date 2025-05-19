@@ -13,7 +13,7 @@ def main() -> None:
     rendered_frame = bytearray(client.frame_bytecount)
 
     while True:
-        time = client.render_begin()
+        (time, *_) = client.render_begin()
         r = int(time % 255)
         b = int((time + 128) % 255)
         pixel = struct.pack("=4B", r, 0, b, 255)

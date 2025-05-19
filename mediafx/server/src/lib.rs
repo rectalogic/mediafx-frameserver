@@ -6,12 +6,13 @@ use std::{
     process::{Child, ChildStdin, ChildStdout, Command, Stdio},
 };
 
-use shared_memory::ShmemConf;
-
+pub use mediafx_common::messages::RenderData;
 use mediafx_common::{
     context::{RenderContext, RenderSize},
     messages::{RenderAck, RenderFrame, RenderInitialize, receive_message, send_message},
 };
+
+use shared_memory::ShmemConf;
 
 pub struct MediaFXServer {
     context: RenderContext,
@@ -21,8 +22,9 @@ pub struct MediaFXServer {
 }
 
 impl MediaFXServer {
-    pub fn new(
+    pub fn new<C: Into<String>>(
         client_path: &str,
+        config: C,
         width: u32,
         height: u32,
         count: usize,
@@ -42,7 +44,8 @@ impl MediaFXServer {
             .take()
             .ok_or("frame client stdout is not available")?;
         let shmem = ShmemConf::new().size(size.memory_size()).create()?;
-        let render_initialize = RenderInitialize::new(size, shmem.get_os_id().into());
+        let render_initialize =
+            RenderInitialize::new(size, shmem.get_os_id().into(), config.into());
         let context = RenderContext::new(size, shmem);
 
         send_message(&render_initialize, &mut client_stdin)?;
@@ -60,8 +63,8 @@ impl MediaFXServer {
         self.context.frame_mut(frame_num)
     }
 
-    pub fn render(&mut self, time: f64) -> Result<&mut [u8], Box<dyn Error>> {
-        send_message(RenderFrame::Render(time), &mut self.client_stdin)?;
+    pub fn render(&mut self, render_data: RenderData) -> Result<&mut [u8], Box<dyn Error>> {
+        send_message(RenderFrame::Render(render_data), &mut self.client_stdin)?;
         // XXX check for errors
         let _response: RenderAck = receive_message(&mut self.client_stdout)?;
         Ok(self.context.rendered_frame_mut())
