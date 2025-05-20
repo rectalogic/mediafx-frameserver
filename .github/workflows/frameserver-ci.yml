@@ -52,22 +52,18 @@ jobs:
           FREI0R_PATH: ${{ github.workspace }}/target/debug
         shell: bash
         run: |
-          # Refer to the plugins using 'libXXX' name for macOS/Linux
-          # https://github.com/rust-lang/cargo/issues/1970
           if [ "$RUNNER_OS" == "Windows" ]; then
-            PLUGINPREFIX=""
             PYSUFFIX=cmd
             echo -e "@echo off\n\rpython clients/mediafx-py/python/tests/color.py" > clients/mediafx-py/python/tests/color.cmd
             echo -e "@echo off\n\rpython clients/mediafx-py/python/tests/shift.py" > clients/mediafx-py/python/tests/shift.cmd
             source clients/mediafx-py/.venv/Scripts/activate
           else
-            PLUGINPREFIX=lib
             PYSUFFIX=py
             source clients/mediafx-py/.venv/bin/activate
           fi
 
-          ffmpeg -f lavfi -i 'testsrc=duration=2:size=640x360:rate=30:decimals=2,drawbox=color=red:t=ih/16' -vf "frei0r=filter_name=${PLUGINPREFIX}mediafx_filter:filter_params=target/debug/examples/shift" -y frei0r_shift.mp4
-          ffmpeg -f lavfi -i "frei0r_src=size=640x360:framerate=30:filter_name=${PLUGINPREFIX}mediafx_source:filter_params=target/debug/examples/color" -t 2 -y frei0r_color.mp4
+          ffmpeg -f lavfi -i 'testsrc=duration=2:size=640x360:rate=30:decimals=2,drawbox=color=red:t=ih/16' -vf "frei0r=filter_name=mediafx_filter:filter_params=target/debug/examples/shift" -y frei0r_shift.mp4
+          ffmpeg -f lavfi -i "frei0r_src=size=640x360:framerate=30:filter_name=mediafx_source:filter_params=target/debug/examples/color" -t 2 -y frei0r_color.mp4
 
-          ffmpeg -f lavfi -i 'testsrc=duration=2:size=640x360:rate=30:decimals=2,drawbox=color=red:t=ih/16' -vf "frei0r=filter_name=${PLUGINPREFIX}mediafx_filter:filter_params=clients/mediafx-py/python/tests/shift.${PYSUFFIX}" -y python_shift.mp4
-          ffmpeg -f lavfi -i "frei0r_src=size=640x360:framerate=30:filter_name=${PLUGINPREFIX}mediafx_source:filter_params=clients/mediafx-py/python/tests/color.${PYSUFFIX}" -t 2 -y python_color.mp4
+          ffmpeg -f lavfi -i 'testsrc=duration=2:size=640x360:rate=30:decimals=2,drawbox=color=red:t=ih/16' -vf "frei0r=filter_name=mediafx_filter:filter_params=clients/mediafx-py/python/tests/shift.${PYSUFFIX}" -y python_shift.mp4
+          ffmpeg -f lavfi -i "frei0r_src=size=640x360:framerate=30:filter_name=mediafx_source:filter_params=clients/mediafx-py/python/tests/color.${PYSUFFIX}" -t 2 -y python_color.mp4
