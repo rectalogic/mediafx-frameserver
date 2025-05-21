@@ -14,6 +14,8 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
       - name: rustup
         run: rustup update stable
       - name: Install uv
@@ -38,11 +40,12 @@ jobs:
       - name: Install ffmpeg
         run: |
           if [ "$RUNNER_OS" == "Linux" ]; then
-            sudo apt install ffmpeg
+            sudo apt install melt ffmpeg
           elif [ "$RUNNER_OS" == "macOS" ]; then
-            brew install ffmpeg
+            brew install mlt ffmpeg
           elif [ "$RUNNER_OS" == "Windows" ]; then
-            choco install ffmpeg-full
+            choco install shotcut.portable ffmpeg-full
+            echo "C:\ProgramData\Chocolatey\bin" >> "$GITHUB_PATH"
           else
             exit 1
           fi
@@ -57,13 +60,52 @@ jobs:
             echo -e "@echo off\n\rpython clients/mediafx-py/python/tests/color.py" > clients/mediafx-py/python/tests/color.cmd
             echo -e "@echo off\n\rpython clients/mediafx-py/python/tests/shift.py" > clients/mediafx-py/python/tests/shift.cmd
             source clients/mediafx-py/.venv/Scripts/activate
+            # MLT on windows does not honor FREI0R_PATH env var
+            cp target/debug/mediafx_*.dll "C:\ProgramData\Chocolatey\lib\shotcut.portable\tools\Shotcut\lib\frei0r-1"
           else
             PYSUFFIX=py
             source clients/mediafx-py/.venv/bin/activate
+            # ffmpeg uses incorrect frei0r suffix on macOS
+            if [ "$RUNNER_OS" == "macOS" ]; then
+              ln -s mediafx_source.so target/debug/mediafx_source.dylib
+              ln -s mediafx_filter.so target/debug/mediafx_filter.dylib
+              ln -s mediafx_mixer2.so target/debug/mediafx_mixer2.dylib
+              ln -s mediafx_mixer3.so target/debug/mediafx_mixer3.dylib
+            fi
           fi
+          mkdir output
+          TESTSRC=testsrc=duration=2:size=640x360:rate=30:decimals=2,drawbox=color=red:t=ih/16
 
-          ffmpeg -f lavfi -i 'testsrc=duration=2:size=640x360:rate=30:decimals=2,drawbox=color=red:t=ih/16' -vf "frei0r=filter_name=mediafx_filter:filter_params=target/debug/examples/shift" -y frei0r_shift.mp4
-          ffmpeg -f lavfi -i "frei0r_src=size=640x360:framerate=30:filter_name=mediafx_source:filter_params=target/debug/examples/color" -t 2 -y frei0r_color.mp4
+          ffmpeg -f lavfi -i $TESTSRC -vf "frei0r=filter_name=mediafx_filter:filter_params=target/debug/examples/shift||0.5|0.25" -y output/ffmpeg_frei0r_shift.mp4
+          ffmpeg -f lavfi -i "frei0r_src=size=640x360:framerate=30:filter_name=mediafx_source:filter_params=target/debug/examples/color||1" -t 2 -y output/ffmpeg_frei0r_color.mp4
 
-          ffmpeg -f lavfi -i 'testsrc=duration=2:size=640x360:rate=30:decimals=2,drawbox=color=red:t=ih/16' -vf "frei0r=filter_name=mediafx_filter:filter_params=clients/mediafx-py/python/tests/shift.${PYSUFFIX}" -y python_shift.mp4
-          ffmpeg -f lavfi -i "frei0r_src=size=640x360:framerate=30:filter_name=mediafx_source:filter_params=clients/mediafx-py/python/tests/color.${PYSUFFIX}" -t 2 -y python_color.mp4
+          ffmpeg -f lavfi -i $TESTSRC -vf "frei0r=filter_name=mediafx_filter:filter_params=clients/mediafx-py/python/tests/shift.${PYSUFFIX}||0.5|0.25" -y output/ffmpeg_python_shift.mp4
+          ffmpeg -f lavfi -i "frei0r_src=size=640x360:framerate=30:filter_name=mediafx_source:filter_params=clients/mediafx-py/python/tests/color.${PYSUFFIX}||1" -t 2 -y output/ffmpeg_python_color.mp4
+
+          # Animate properties
+          MLT_PROFILE_ARGS=(fps=30 width=640 height=360 progressive=1)
+          melt lavfi:$TESTSRC out=60 -filter frei0r.mediafx_filter 0="target/debug/examples/shift" 2="0=0.0;-1=1.0" 3="0=0.0;-1=1.0" -consumer avformat target=output/melt_frei0r_shift.mp4 "${MLT_PROFILE_ARGS[@]}"
+          melt frei0r.mediafx_source 0="target/debug/examples/color" 2="0=0.0;-1=1.0" 3="0=1.0;-1=0.0" 4="0=0.5;-1=1.0" out=60 -consumer avformat target=output/melt_frei0r_color.mp4 "${MLT_PROFILE_ARGS[@]}"
+          melt lavfi:$TESTSRC out=60 -filter frei0r.mediafx_filter 0="clients/mediafx-py/python/tests/shift.${PYSUFFIX}" 2="0=0.0;-1=1.0" 3="0=0.0;-1=1.0" -consumer avformat target=output/melt_python_shift.mp4 "${MLT_PROFILE_ARGS[@]}"
+          melt frei0r.mediafx_source 0="clients/mediafx-py/python/tests/color.${PYSUFFIX}" 2="0=0.0;-1=1.0" 3="0=1.0;-1=0.0" 4="0=0.5;-1=1.0" out=60 -consumer avformat target=output/melt_python_color.mp4 "${MLT_PROFILE_ARGS[@]}"
+
+          # Compare videos to fixtures
+          THRESHOLD=0
+          EXIT=0
+          for FIXTURE in .github/workflows/fixtures/output/mediafx-frameserver/*.mp4; do
+            OUTPUT=output/$(basename "$FIXTURE")
+            COMPARE=$( ffmpeg -hide_banner -an -i "${FIXTURE}" -an -i "${OUTPUT}" -filter_complex "blend=all_mode=difference,blackframe=amount=0:threshold=3,metadata=select:key=lavfi.blackframe.pblack:value=${THRESHOLD}:function=less,metadata=print:file=-" -an -loglevel warning -f null - | { grep pblack || true; } ) || exit 1
+            if [ "$COMPARE" ]; then
+              EXIT=1
+              echo -e "Compare output:\n$COMPARE"
+              .github/workflows/diff-video.sh "$FIXTURE" "$OUTPUT" "diff-${OUTPUT}.nut"
+            fi
+          done
+          exit $EXIT
+      - name: Upload videos
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: videos-${{ matrix.platform }}
+          path: output/
+          retention-days: 1

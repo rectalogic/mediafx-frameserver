@@ -4,9 +4,6 @@
 
 from mediafx import MediaFX
 
-XSHIFT = 0.5
-YSHIFT = 0.25
-
 
 def main() -> None:
     client = MediaFX()
@@ -15,10 +12,10 @@ def main() -> None:
     frames = [bytearray(client.frame_bytecount)]
 
     while True:
-        client.render_begin(frames)
+        (_, xshift, yshift, _) = client.render_begin(frames)
 
-        xshift = int(XSHIFT * width)
-        yshift = int(YSHIFT * height)
+        xshift = int(xshift * width)
+        yshift = int(yshift * height)
         for dy in range(0, height):
             for dx in range(0, width):
                 sy = (dy + yshift) % height

@@ -1,16 +1,13 @@
 // Copyright (C) 2025 Andrew Wason
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// XXX need to forward params to client
-const XSHIFT: f32 = 0.5;
-const YSHIFT: f32 = 0.25;
-
 fn filter_frame(frame_client: mediafx_client::MediaFXClient) -> mediafx_client::MediaFXClient {
     let size = frame_client.render_size();
     let mut request = frame_client.request_render().unwrap();
 
-    let xshift = (XSHIFT * size.width() as f32) as u32;
-    let yshift = (YSHIFT * size.height() as f32) as u32;
+    let (_, xshift, yshift, _) = *request.render_data();
+    let xshift = (xshift * size.width() as f64) as u32;
+    let yshift = (yshift * size.height() as f64) as u32;
     for dy in 0..size.height() {
         for dx in 0..size.width() {
             let sy = (dy + yshift) % size.height();
