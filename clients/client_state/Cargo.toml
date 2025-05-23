@@ -1,18 +1,9 @@
 [package]
-name = "mediafx-py"
+name = "client_state"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 rust-version.workspace = true
 
-[lib]
-name = "_mediafx"
-crate-type = ["cdylib"]
-
 [dependencies]
-client_state = { path = "../client_state" }
 mediafx_client = { path = "../../mediafx/client" }
-
-[dependencies.pyo3]
-version = "0.25"
-features = ["abi3-py312"]

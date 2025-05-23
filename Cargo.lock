@@ -105,6 +105,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "client_state"
+version = "0.1.1"
+dependencies = [
+ "mediafx_client",
+]
+
+[[package]]
 name = "either"
 version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -201,6 +208,7 @@ checksum = "13dc2df351e3202783a1fe0d44375f7295ffb4049267b0f3018346dc122a1d94"
 name = "mediafx-py"
 version = "0.1.1"
 dependencies = [
+ "client_state",
  "mediafx_client",
  "pyo3",
 ]
