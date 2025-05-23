@@ -1,8 +1,10 @@
 // Copyright (C) 2025 Andrew Wason
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use std::error::Error;
+use std::os::fd::FromRawFd;
+use std::{error::Error, io};
 
+use mediafx_common::{CLIENT_IN_FD, CLIENT_OUT_FD};
 use shared_memory::ShmemConf;
 
 pub use mediafx_common::context::{BYTES_PER_PIXEL, RenderSize};
@@ -14,26 +16,26 @@ use mediafx_common::{
 
 #[derive(Debug)]
 pub struct MediaFXClient {
-    stdin: std::io::Stdin,
-    stdout: std::io::Stdout,
+    pipe_input: io::PipeReader,
+    pipe_output: io::PipeWriter,
     context: RenderContext,
     config: String,
 }
 
 impl MediaFXClient {
     pub fn new() -> Result<Self, Box<dyn Error>> {
-        let mut stdin = std::io::stdin();
-        let mut stdout = std::io::stdout();
-        let render_initialize: RenderInitialize = receive_message(&mut stdin)?;
+        let mut pipe_input = unsafe { io::PipeReader::from_raw_fd(CLIENT_IN_FD) };
+        let mut pipe_output = unsafe { io::PipeWriter::from_raw_fd(CLIENT_OUT_FD) };
+        let render_initialize: RenderInitialize = receive_message(&mut pipe_input)?;
         let shmem = ShmemConf::new()
             .os_id(render_initialize.shmem_id())
             .open()?;
-        send_message(RenderAck::default(), &mut stdout)?;
+        send_message(RenderAck::default(), &mut pipe_output)?;
         let context = RenderContext::new(*render_initialize.size(), shmem);
 
         Ok(MediaFXClient {
-            stdin,
-            stdout,
+            pipe_input,
+            pipe_output,
             context,
             config: render_initialize.config().into(),
         })
@@ -49,7 +51,7 @@ impl MediaFXClient {
 
     #[allow(clippy::result_large_err)]
     pub fn request_render(mut self) -> Result<RenderRequest, (Self, Box<dyn Error>)> {
-        match receive_message(&mut self.stdin) {
+        match receive_message(&mut self.pipe_input) {
             Ok(RenderFrame::Terminate) => std::process::exit(0),
             Ok(RenderFrame::Render(render_data)) => Ok(RenderRequest {
                 frame_client: self,
@@ -89,7 +91,7 @@ impl RenderRequest {
 
     #[allow(clippy::result_large_err)]
     pub fn render_complete(mut self) -> Result<MediaFXClient, (Self, Box<dyn Error>)> {
-        match send_message(RenderAck::default(), &mut self.frame_client.stdout) {
+        match send_message(RenderAck::default(), &mut self.frame_client.pipe_output) {
             Ok(_) => Ok(self.frame_client),
             Err(err) => Err((self, err)),
         }
