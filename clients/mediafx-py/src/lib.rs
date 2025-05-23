@@ -18,17 +18,16 @@ struct MediaFX {
 impl MediaFX {
     #[new]
     fn new() -> PyResult<Self> {
-        let state = match MediaFXClient::new() {
-            Ok(client) => State::MediaFXClient(client),
-            Err(err) => return Err(PyRuntimeError::new_err(err.to_string())),
-        };
-        Ok(MediaFX { state: Some(state) })
+        Ok(MediaFX {
+            state: Some(State::MediaFXClient(
+                MediaFXClient::new().map_err(|err| PyRuntimeError::new_err(err.to_string()))?,
+            )),
+        })
     }
 
     #[getter]
     fn get_config(&self) -> PyResult<&str> {
-        let config = self.get_config_internal();
-        Ok(config)
+        Ok(self.get_config_internal())
     }
 
     #[getter]
@@ -45,28 +44,25 @@ impl MediaFX {
 
     #[getter]
     fn get_frame_count(&self) -> PyResult<usize> {
-        let size = self.get_size();
-        Ok(size.count())
+        Ok(self.get_size().count())
     }
 
     #[pyo3(signature = (frames=None))]
     fn render_begin(&mut self, frames: Option<&Bound<PySequence>>) -> PyResult<RenderData> {
         let current_state = self.state.take().expect("Invalid internal state");
         match current_state {
-            State::MediaFXClient(client) => match client.request_render() {
-                Ok(render_request) => {
-                    let render_data = *render_request.render_data();
-                    if let Some(buffers) = frames {
-                        self.copy_source_frames(&render_request, buffers)?;
-                    }
-                    self.state = Some(State::RenderRequest(render_request));
-                    Ok(render_data)
-                }
-                Err((client, err)) => {
+            State::MediaFXClient(client) => {
+                let render_request = client.request_render().map_err(|(client, err)| {
                     self.state = Some(State::MediaFXClient(client));
-                    Err(PyRuntimeError::new_err(err.to_string()))
+                    PyRuntimeError::new_err(err.to_string())
+                })?;
+                let render_data = *render_request.render_data();
+                if let Some(buffers) = frames {
+                    self.copy_source_frames(&render_request, buffers)?;
                 }
-            },
+                self.state = Some(State::RenderRequest(render_request));
+                Ok(render_data)
+            }
             State::RenderRequest(render_request) => {
                 let time = *render_request.render_data();
                 if let Some(buffers) = frames {
@@ -83,26 +79,23 @@ impl MediaFX {
         match current_state {
             State::RenderRequest(mut render_request) => {
                 let rendered_frame = render_request.get_rendered_frame_mut();
-                match Python::with_gil(|py| -> PyResult<()> {
+                let result = Python::with_gil(|py| -> PyResult<()> {
                     frame.copy_to_slice(py, rendered_frame)
-                }) {
-                    Ok(_) => {}
-                    Err(err) => {
-                        self.state = Some(State::RenderRequest(render_request));
-                        return Err(PyRuntimeError::new_err(err.to_string()));
-                    }
+                });
+                if let Err(err) = result {
+                    self.state = Some(State::RenderRequest(render_request));
+                    return Err(PyRuntimeError::new_err(err.to_string()));
                 }
 
-                match render_request.render_complete() {
-                    Ok(client) => {
-                        self.state = Some(State::MediaFXClient(client));
-                        Ok(())
-                    }
-                    Err((render_request, err)) => {
-                        self.state = Some(State::RenderRequest(render_request));
-                        Err(PyRuntimeError::new_err(err.to_string()))
-                    }
-                }
+                let client =
+                    render_request
+                        .render_complete()
+                        .map_err(|(render_request, err)| {
+                            self.state = Some(State::RenderRequest(render_request));
+                            PyRuntimeError::new_err(err.to_string())
+                        })?;
+                self.state = Some(State::MediaFXClient(client));
+                Ok(())
             }
             State::MediaFXClient(client) => {
                 self.state = Some(State::MediaFXClient(client));
@@ -137,10 +130,10 @@ impl MediaFX {
         Python::with_gil(|py| -> PyResult<()> {
             for (frame_num, buffer) in frames.try_iter()?.enumerate() {
                 let frame: PyBuffer<u8> = PyBuffer::get(&buffer?)?;
-                match render_request.get_source_frame(frame_num) {
-                    Ok(source) => frame.copy_from_slice(py, source)?,
-                    Err(err) => return Err(PyRuntimeError::new_err(err.to_string())),
-                }
+                let source = render_request
+                    .get_source_frame(frame_num)
+                    .map_err(|err| PyRuntimeError::new_err(err.to_string()))?;
+                frame.copy_from_slice(py, source)?;
             }
             Ok(())
         })
