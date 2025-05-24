@@ -24,19 +24,19 @@ jobs:
           version: "0.7.4"
       - name: Lint
         run: |
-          uv run --project clients/mediafx-py cargo fmt -- --check
-          uv run --project clients/mediafx-py cargo clippy -- -D warnings
+          uv run --project clients/mediafx_py cargo fmt -- --check
+          uv run --project clients/mediafx_py cargo clippy -- -D warnings
 
-          cd clients/mediafx-py
+          cd clients/mediafx_py
           uv sync
           uv run ruff check
           uv run ruff format --check
           uv run mypy
       - name: Build
         run: |
-          uv run --project clients/mediafx-py cargo build --all-targets --verbose
+          uv run --project clients/mediafx_py cargo build --all-targets --verbose
       - name: Run tests
-        run: uv run --project clients/mediafx-py cargo test --verbose
+        run: uv run --project clients/mediafx_py cargo test --verbose
       - name: Install ffmpeg
         run: |
           if [ "$RUNNER_OS" == "Linux" ]; then
@@ -57,14 +57,14 @@ jobs:
         run: |
           if [ "$RUNNER_OS" == "Windows" ]; then
             PYSUFFIX=cmd
-            echo -e "@echo off\n\rpython clients/mediafx-py/python/tests/color.py" > clients/mediafx-py/python/tests/color.cmd
-            echo -e "@echo off\n\rpython clients/mediafx-py/python/tests/shift.py" > clients/mediafx-py/python/tests/shift.cmd
-            source clients/mediafx-py/.venv/Scripts/activate
+            echo -e "@echo off\n\rpython clients/mediafx_py/python/tests/color.py" > clients/mediafx_py/python/tests/color.cmd
+            echo -e "@echo off\n\rpython clients/mediafx_py/python/tests/shift.py" > clients/mediafx_py/python/tests/shift.cmd
+            source clients/mediafx_py/.venv/Scripts/activate
             # MLT on windows does not honor FREI0R_PATH env var
             cp target/debug/mediafx_*.dll "C:\ProgramData\Chocolatey\lib\shotcut.portable\tools\Shotcut\lib\frei0r-1"
           else
             PYSUFFIX=py
-            source clients/mediafx-py/.venv/bin/activate
+            source clients/mediafx_py/.venv/bin/activate
             # ffmpeg uses incorrect frei0r suffix on macOS
             if [ "$RUNNER_OS" == "macOS" ]; then
               ln -s mediafx_source.so target/debug/mediafx_source.dylib
@@ -79,15 +79,15 @@ jobs:
           ffmpeg -f lavfi -i $TESTSRC -vf "frei0r=filter_name=mediafx_filter:filter_params=target/debug/examples/shift||0.5|0.25" -y output/ffmpeg_frei0r_shift.mp4
           ffmpeg -f lavfi -i "frei0r_src=size=640x360:framerate=30:filter_name=mediafx_source:filter_params=target/debug/examples/color||1" -t 2 -y output/ffmpeg_frei0r_color.mp4
 
-          ffmpeg -f lavfi -i $TESTSRC -vf "frei0r=filter_name=mediafx_filter:filter_params=clients/mediafx-py/python/tests/shift.${PYSUFFIX}||0.5|0.25" -y output/ffmpeg_python_shift.mp4
-          ffmpeg -f lavfi -i "frei0r_src=size=640x360:framerate=30:filter_name=mediafx_source:filter_params=clients/mediafx-py/python/tests/color.${PYSUFFIX}||1" -t 2 -y output/ffmpeg_python_color.mp4
+          ffmpeg -f lavfi -i $TESTSRC -vf "frei0r=filter_name=mediafx_filter:filter_params=clients/mediafx_py/python/tests/shift.${PYSUFFIX}||0.5|0.25" -y output/ffmpeg_python_shift.mp4
+          ffmpeg -f lavfi -i "frei0r_src=size=640x360:framerate=30:filter_name=mediafx_source:filter_params=clients/mediafx_py/python/tests/color.${PYSUFFIX}||1" -t 2 -y output/ffmpeg_python_color.mp4
 
           # Animate properties
           MLT_PROFILE_ARGS=(fps=30 width=640 height=360 progressive=1)
           melt lavfi:$TESTSRC out=60 -filter frei0r.mediafx_filter 0="target/debug/examples/shift" 2="0=0.0;-1=1.0" 3="0=0.0;-1=1.0" -consumer avformat target=output/melt_frei0r_shift.mp4 "${MLT_PROFILE_ARGS[@]}"
           melt frei0r.mediafx_source 0="target/debug/examples/color" 2="0=0.0;-1=1.0" 3="0=1.0;-1=0.0" 4="0=0.5;-1=1.0" out=60 -consumer avformat target=output/melt_frei0r_color.mp4 "${MLT_PROFILE_ARGS[@]}"
-          melt lavfi:$TESTSRC out=60 -filter frei0r.mediafx_filter 0="clients/mediafx-py/python/tests/shift.${PYSUFFIX}" 2="0=0.0;-1=1.0" 3="0=0.0;-1=1.0" -consumer avformat target=output/melt_python_shift.mp4 "${MLT_PROFILE_ARGS[@]}"
-          melt frei0r.mediafx_source 0="clients/mediafx-py/python/tests/color.${PYSUFFIX}" 2="0=0.0;-1=1.0" 3="0=1.0;-1=0.0" 4="0=0.5;-1=1.0" out=60 -consumer avformat target=output/melt_python_color.mp4 "${MLT_PROFILE_ARGS[@]}"
+          melt lavfi:$TESTSRC out=60 -filter frei0r.mediafx_filter 0="clients/mediafx_py/python/tests/shift.${PYSUFFIX}" 2="0=0.0;-1=1.0" 3="0=0.0;-1=1.0" -consumer avformat target=output/melt_python_shift.mp4 "${MLT_PROFILE_ARGS[@]}"
+          melt frei0r.mediafx_source 0="clients/mediafx_py/python/tests/color.${PYSUFFIX}" 2="0=0.0;-1=1.0" 3="0=1.0;-1=0.0" 4="0=0.5;-1=1.0" out=60 -consumer avformat target=output/melt_python_color.mp4 "${MLT_PROFILE_ARGS[@]}"
 
           # Compare videos to fixtures
           THRESHOLD=0
