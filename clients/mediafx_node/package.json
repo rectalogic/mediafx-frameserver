@@ -4,7 +4,7 @@
   "main": "index.js",
   "types": "index.d.ts",
   "napi": {
-    "name": "client",
+    "name": "mediafx",
     "triples": {
       "additional": [
         "aarch64-apple-darwin",
@@ -12,13 +12,10 @@
       ]
     }
   },
-  "license": "MIT",
+  "license": "GPL-3.0-or-later",
   "devDependencies": {
     "@napi-rs/cli": "^2.18.4",
-    "ava": "^6.0.1"
-  },
-  "ava": {
-    "timeout": "3m"
+    "@types/node": "^22.15.21"
   },
   "engines": {
     "node": ">= 10"
@@ -28,7 +25,6 @@
     "build": "napi build --platform --release",
     "build:debug": "napi build --platform",
     "prepublishOnly": "napi prepublish -t npm",
-    "test": "ava",
     "universal": "napi universal",
     "version": "napi version"
   },

@@ -9,7 +9,7 @@ from mediafx import MediaFX
 
 def main() -> None:
     client = MediaFX()
-    width, height = client.frame_size
+    # width, height = client.frame_size
     rendered_frame = bytearray(client.frame_bytecount)
 
     while True:

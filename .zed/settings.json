@@ -1,0 +1,12 @@
+{
+  "lsp": {
+    "rust-analyzer": {
+      "initialization_options": {
+        // https://github.com/rust-lang/rust-analyzer/issues/17429
+        "procMacro": {
+          "ignored": { "napi-derive": ["napi"] }
+        }
+      }
+    }
+  }
+}

@@ -12,6 +12,7 @@ members = [
     "frei0r/mediafx_source",
     "clients/client_state",
     "clients/mediafx_py",
+    "clients/mediafx_node",
 ]
 
 [workspace.package]
@@ -19,3 +20,9 @@ version = "0.1.1"
 edition = "2024"
 license = "GPL-3.0-or-later"
 rust-version = "1.85"
+
+[profile.release]
+lto = true
+
+[profile.release.package.mediafx_node]
+strip = "symbols"
