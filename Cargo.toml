@@ -1,10 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
-    "mediafx/server",
-    "mediafx/client",
-    "mediafx/common",
-    "mediafx/tests",
+    "mediafx",
     "frei0r/mediafx",
     "frei0r/mediafx_filter",
     "frei0r/mediafx_mixer2",

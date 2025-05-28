@@ -7,10 +7,7 @@ rust-version.workspace = true
 
 [dependencies]
 frei0r-rs = { git = "https://github.com/rectalogic/frei0r-rs.git", branch = "updates" }
-mediafx_server = { path = "../../mediafx/server" }
-
-[dev-dependencies]
-mediafx_client = { path = "../../mediafx/client" }
+mediafx = { path = "../../mediafx" }
 
 [[example]]
 name = "shift"

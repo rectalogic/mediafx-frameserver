@@ -3,8 +3,7 @@
 
 use std::error::Error;
 
-use client_state::ClientState;
-use mediafx_client::RenderData;
+use client_state::{ClientState, RenderData};
 use pyo3::{buffer::PyBuffer, exceptions::PyRuntimeError, prelude::*, types::PySequence};
 
 #[pyclass]

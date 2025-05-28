@@ -1,5 +1,5 @@
 [package]
-name = "mediafx_common"
+name = "mediafx"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -8,3 +8,7 @@ rust-version.workspace = true
 [dependencies]
 bincode = "2.0"
 shared_memory = "0.12"
+
+[[test]]
+name = "ipc"
+harness = false

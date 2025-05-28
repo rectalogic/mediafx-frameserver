@@ -7,7 +7,7 @@ use std::{error::Error, ops::Range};
 
 pub const BYTES_PER_PIXEL: usize = 4;
 
-pub struct RenderContext {
+pub(super) struct RenderContext {
     size: RenderSize,
     shmem: Shmem,
 }
@@ -29,17 +29,17 @@ impl std::fmt::Debug for RenderContext {
 }
 
 impl RenderContext {
-    pub fn new(size: RenderSize, shmem: Shmem) -> Self {
+    pub(super) fn new(size: RenderSize, shmem: Shmem) -> Self {
         RenderContext { size, shmem }
     }
 
-    pub fn render_size(&self) -> RenderSize {
+    pub(super) fn render_size(&self) -> RenderSize {
         self.size
     }
 }
 
 impl RenderSize {
-    pub fn new(width: u32, height: u32, count: usize) -> Self {
+    pub(super) fn new(width: u32, height: u32, count: usize) -> Self {
         RenderSize {
             width,
             height,
@@ -70,21 +70,21 @@ unsafe impl Sync for RenderContext {}
 unsafe impl Send for RenderContext {}
 
 impl RenderContext {
-    pub fn frame(&self, frame_num: usize) -> Result<&[u8], Box<dyn Error>> {
+    pub(super) fn frame(&self, frame_num: usize) -> Result<&[u8], Box<dyn Error>> {
         self.check_frame(frame_num)?;
         let range = self.frame_range(frame_num);
         let bytes = unsafe { self.shmem.as_slice() };
         Ok(&bytes[range])
     }
 
-    pub fn frame_mut(&mut self, frame_num: usize) -> Result<&mut [u8], Box<dyn Error>> {
+    pub(super) fn frame_mut(&mut self, frame_num: usize) -> Result<&mut [u8], Box<dyn Error>> {
         self.check_frame(frame_num)?;
         let range = self.frame_range(frame_num);
         let bytes = unsafe { self.shmem.as_slice_mut() };
         Ok(&mut bytes[range])
     }
 
-    pub fn rendered_frame_mut(&mut self) -> &mut [u8] {
+    pub(super) fn rendered_frame_mut(&mut self) -> &mut [u8] {
         let range = self.frame_range(self.size.count);
         let bytes = unsafe { self.shmem.as_slice_mut() };
         &mut bytes[range]

@@ -6,4 +6,4 @@ license.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-mediafx_client = { path = "../../mediafx/client" }
+mediafx = { path = "../../mediafx" }

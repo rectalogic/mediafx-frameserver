@@ -6,8 +6,8 @@ use std::{
     process::{Child, ChildStdin, ChildStdout, Command, Stdio},
 };
 
-pub use mediafx_common::messages::RenderData;
-use mediafx_common::{
+pub use crate::messages::RenderData;
+use crate::{
     context::{RenderContext, RenderSize},
     messages::{RenderAck, RenderFrame, RenderInitialize, receive_message, send_message},
 };

@@ -8,7 +8,7 @@ use std::{
 };
 
 pub use frei0r_rs;
-use mediafx_server::RenderData;
+use mediafx::server::RenderData;
 
 #[derive(frei0r_rs::PluginBase)]
 pub struct MediaFXServerPlugin<K: frei0r_rs::PluginKind> {
@@ -25,7 +25,7 @@ pub struct MediaFXServerPlugin<K: frei0r_rs::PluginKind> {
     width: u32,
     height: u32,
     frame_count: usize,
-    frame_server: Option<mediafx_server::MediaFXServer>,
+    frame_server: Option<mediafx::server::MediaFXServer>,
     frame_server_initialized: bool,
     _phantom: PhantomData<K>,
 }
@@ -54,7 +54,7 @@ where
         (time, self.param1, self.param2, self.param3)
     }
 
-    fn frame_server(&mut self) -> Option<&mut mediafx_server::MediaFXServer> {
+    fn frame_server(&mut self) -> Option<&mut mediafx::server::MediaFXServer> {
         if self.frame_server_initialized {
             return self.frame_server.as_mut();
         }
@@ -77,7 +77,7 @@ where
                         return None;
                     }
                 };
-                match mediafx_server::MediaFXServer::new(
+                match mediafx::server::MediaFXServer::new(
                     client_path,
                     client_config,
                     self.width,

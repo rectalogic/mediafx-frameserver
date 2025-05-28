@@ -3,7 +3,8 @@
 
 use std::error::Error;
 
-use mediafx_client::{BYTES_PER_PIXEL, MediaFXClient, RenderData, RenderRequest, RenderSize};
+pub use mediafx::client::RenderData;
+use mediafx::client::{BYTES_PER_PIXEL, MediaFXClient, RenderRequest, RenderSize};
 
 enum State {
     MediaFXClient(MediaFXClient),

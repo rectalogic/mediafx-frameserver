@@ -108,7 +108,7 @@ dependencies = [
 name = "client_state"
 version = "0.1.1"
 dependencies = [
- "mediafx_client",
+ "mediafx",
 ]
 
 [[package]]
@@ -224,15 +224,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13dc2df351e3202783a1fe0d44375f7295ffb4049267b0f3018346dc122a1d94"
 
 [[package]]
-name = "mediafx_client"
-version = "0.1.1"
-dependencies = [
- "mediafx_common",
- "shared_memory",
-]
-
-[[package]]
-name = "mediafx_common"
+name = "mediafx"
 version = "0.1.1"
 dependencies = [
  "bincode",
@@ -251,8 +243,7 @@ name = "mediafx_frei0r"
 version = "0.1.1"
 dependencies = [
  "frei0r-rs",
- "mediafx_client",
- "mediafx_server",
+ "mediafx",
 ]
 
 [[package]]
@@ -274,7 +265,6 @@ name = "mediafx_node"
 version = "0.1.1"
 dependencies = [
  "client_state",
- "mediafx_client",
  "napi",
  "napi-build",
  "napi-derive",
@@ -285,16 +275,7 @@ name = "mediafx_py"
 version = "0.1.1"
 dependencies = [
  "client_state",
- "mediafx_client",
  "pyo3",
-]
-
-[[package]]
-name = "mediafx_server"
-version = "0.1.1"
-dependencies = [
- "mediafx_common",
- "shared_memory",
 ]
 
 [[package]]
@@ -302,14 +283,6 @@ name = "mediafx_source"
 version = "0.1.1"
 dependencies = [
  "mediafx_frei0r",
-]
-
-[[package]]
-name = "mediafx_tests"
-version = "0.1.1"
-dependencies = [
- "mediafx_client",
- "mediafx_server",
 ]
 
 [[package]]

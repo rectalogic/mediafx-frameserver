@@ -5,12 +5,10 @@ use std::error::Error;
 
 use shared_memory::ShmemConf;
 
-pub use mediafx_common::context::{BYTES_PER_PIXEL, RenderSize};
-pub use mediafx_common::messages::RenderData;
-use mediafx_common::{
-    context::RenderContext,
-    messages::{RenderAck, RenderFrame, RenderInitialize, receive_message, send_message},
-};
+use crate::context::RenderContext;
+pub use crate::context::{BYTES_PER_PIXEL, RenderSize};
+pub use crate::messages::RenderData;
+use crate::messages::{RenderAck, RenderFrame, RenderInitialize, receive_message, send_message};
 
 #[derive(Debug)]
 pub struct MediaFXClient {
