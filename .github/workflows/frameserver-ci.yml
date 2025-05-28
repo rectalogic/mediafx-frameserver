@@ -71,8 +71,8 @@ jobs:
           if [ "$RUNNER_OS" == "Windows" ]; then
             PYSUFFIX=_py.cmd
             TSSUFFIX=_ts.cmd
-            echo -e "@echo off\n\rpython clients/mediafx_py/python/tests/color.py" > clients/mediafx_py/python/tests/color${PYSUFFIX}
-            echo -e "@echo off\n\rpython clients/mediafx_py/python/tests/shift.py" > clients/mediafx_py/python/tests/shift${PYSUFFIX}
+            echo -e "@echo off\n\rpython clients/mediafx_py/python/examples/color.py" > clients/mediafx_py/python/examples/color${PYSUFFIX}
+            echo -e "@echo off\n\rpython clients/mediafx_py/python/examples/shift.py" > clients/mediafx_py/python/examples/shift${PYSUFFIX}
             echo -e "@echo off\n\rnode clients/mediafx_node/examples/color.ts" > clients/mediafx_node/examples/color${TSSUFFIX}
             echo -e "@echo off\n\rnode clients/mediafx_node/examples/shift.ts" > clients/mediafx_node/examples/shift${TSSUFFIX}
             source clients/mediafx_py/.venv/Scripts/activate
@@ -96,8 +96,8 @@ jobs:
           ffmpeg -f lavfi -i $TESTSRC -vf "frei0r=filter_name=mediafx_filter:filter_params=target/debug/examples/shift||0.5|0.25" -y output/ffmpeg_frei0r_shift.mp4
           ffmpeg -f lavfi -i "frei0r_src=size=640x360:framerate=30:filter_name=mediafx_source:filter_params=target/debug/examples/color||1" -t 2 -y output/ffmpeg_frei0r_color.mp4
 
-          ffmpeg -f lavfi -i $TESTSRC -vf "frei0r=filter_name=mediafx_filter:filter_params=clients/mediafx_py/python/tests/shift${PYSUFFIX}||0.5|0.25" -y output/ffmpeg_python_shift.mp4
-          ffmpeg -f lavfi -i "frei0r_src=size=640x360:framerate=30:filter_name=mediafx_source:filter_params=clients/mediafx_py/python/tests/color${PYSUFFIX}||1" -t 2 -y output/ffmpeg_python_color.mp4
+          ffmpeg -f lavfi -i $TESTSRC -vf "frei0r=filter_name=mediafx_filter:filter_params=clients/mediafx_py/python/examples/shift${PYSUFFIX}||0.5|0.25" -y output/ffmpeg_python_shift.mp4
+          ffmpeg -f lavfi -i "frei0r_src=size=640x360:framerate=30:filter_name=mediafx_source:filter_params=clients/mediafx_py/python/examples/color${PYSUFFIX}||1" -t 2 -y output/ffmpeg_python_color.mp4
 
           ffmpeg -f lavfi -i $TESTSRC -vf "frei0r=filter_name=mediafx_filter:filter_params=clients/mediafx_node/examples/shift${TSSUFFIX}||0.5|0.25" -y output/ffmpeg_node_shift.mp4
           ffmpeg -f lavfi -i "frei0r_src=size=640x360:framerate=30:filter_name=mediafx_source:filter_params=clients/mediafx_node/examples/color${TSSUFFIX}||1" -t 2 -y output/ffmpeg_node_color.mp4
@@ -106,8 +106,8 @@ jobs:
           MLT_PROFILE_ARGS=(fps=30 width=640 height=360 progressive=1)
           melt lavfi:$TESTSRC out=60 -filter frei0r.mediafx_filter 0="target/debug/examples/shift" 2="0=0.0;-1=1.0" 3="0=0.0;-1=1.0" -consumer avformat target=output/melt_frei0r_shift.mp4 "${MLT_PROFILE_ARGS[@]}"
           melt frei0r.mediafx_source 0="target/debug/examples/color" 2="0=0.0;-1=1.0" 3="0=1.0;-1=0.0" 4="0=0.5;-1=1.0" out=60 -consumer avformat target=output/melt_frei0r_color.mp4 "${MLT_PROFILE_ARGS[@]}"
-          melt lavfi:$TESTSRC out=60 -filter frei0r.mediafx_filter 0="clients/mediafx_py/python/tests/shift${PYSUFFIX}" 2="0=0.0;-1=1.0" 3="0=0.0;-1=1.0" -consumer avformat target=output/melt_python_shift.mp4 "${MLT_PROFILE_ARGS[@]}"
-          melt frei0r.mediafx_source 0="clients/mediafx_py/python/tests/color${PYSUFFIX}" 2="0=0.0;-1=1.0" 3="0=1.0;-1=0.0" 4="0=0.5;-1=1.0" out=60 -consumer avformat target=output/melt_python_color.mp4 "${MLT_PROFILE_ARGS[@]}"
+          melt lavfi:$TESTSRC out=60 -filter frei0r.mediafx_filter 0="clients/mediafx_py/python/examples/shift${PYSUFFIX}" 2="0=0.0;-1=1.0" 3="0=0.0;-1=1.0" -consumer avformat target=output/melt_python_shift.mp4 "${MLT_PROFILE_ARGS[@]}"
+          melt frei0r.mediafx_source 0="clients/mediafx_py/python/examples/color${PYSUFFIX}" 2="0=0.0;-1=1.0" 3="0=1.0;-1=0.0" 4="0=0.5;-1=1.0" out=60 -consumer avformat target=output/melt_python_color.mp4 "${MLT_PROFILE_ARGS[@]}"
           melt lavfi:$TESTSRC out=60 -filter frei0r.mediafx_filter 0="clients/mediafx_node/examples/shift${TSSUFFIX}" 2="0=0.0;-1=1.0" 3="0=0.0;-1=1.0" -consumer avformat target=output/melt_node_shift.mp4 "${MLT_PROFILE_ARGS[@]}"
           melt frei0r.mediafx_source 0="clients/mediafx_node/examples/color${TSSUFFIX}" 2="0=0.0;-1=1.0" 3="0=1.0;-1=0.0" 4="0=0.5;-1=1.0" out=60 -consumer avformat target=output/melt_node_color.mp4 "${MLT_PROFILE_ARGS[@]}"
 
