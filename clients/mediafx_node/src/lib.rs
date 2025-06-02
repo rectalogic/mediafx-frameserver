@@ -1,6 +1,5 @@
 // Copyright (C) 2025 Andrew Wason
 // SPDX-License-Identifier: GPL-3.0-or-later
-#![deny(clippy::all)]
 
 use client_state::ClientState;
 use napi::bindgen_prelude::*;
@@ -48,7 +47,7 @@ impl MediaFX {
                 for (frame_num, frame) in frames.iter_mut().enumerate() {
                     let source = render_request.get_source_frame(frame_num)?;
                     check_len(source, &frame)?;
-                    frame.copy_from_slice(source);
+                    unsafe { frame.as_mut().copy_from_slice(source) };
                 }
                 Ok(())
             });

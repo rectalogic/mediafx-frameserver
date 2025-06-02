@@ -1,18 +1,21 @@
 {
-  "name": "@mediafx/client-darwin-x64",
+  "name": "@mediafx/client-linux-arm64-musl",
   "version": "0.0.0",
   "cpu": [
-    "x64"
+    "arm64"
   ],
-  "main": "mediafx.darwin-x64.node",
+  "main": "mediafx.linux-arm64-musl.node",
   "files": [
-    "mediafx.darwin-x64.node"
+    "mediafx.linux-arm64-musl.node"
   ],
   "license": "GPL-3.0-or-later",
   "engines": {
     "node": ">= 10.16.0 < 11 || >= 11.8.0 < 12 || >= 12.0.0"
   },
   "os": [
-    "darwin"
+    "linux"
+  ],
+  "libc": [
+    "musl"
   ]
 }

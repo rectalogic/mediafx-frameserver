@@ -1,12 +1,8 @@
 target
 Cargo.lock
-.cargo
-.github
-npm
 .eslintrc
 .prettierignore
 yarn.lock
 *.node
-.yarn
 __test__
 renovate.json
