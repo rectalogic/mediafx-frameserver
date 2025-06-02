@@ -59,8 +59,10 @@ impl MediaFXServer {
         })
     }
 
-    pub fn get_source_frame_mut(&mut self, frame_num: usize) -> Result<&mut [u8], Box<dyn Error>> {
-        self.context.frame_mut(frame_num)
+    pub fn get_source_frames_mut<const N: usize>(
+        &mut self,
+    ) -> Result<[&mut [u8]; N], Box<dyn Error>> {
+        self.context.frames_mut()
     }
 
     pub fn render(&mut self, render_data: RenderData) -> Result<&mut [u8], Box<dyn Error>> {

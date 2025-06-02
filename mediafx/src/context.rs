@@ -3,7 +3,7 @@
 
 use bincode::{Decode, Encode};
 use shared_memory::Shmem;
-use std::{error::Error, ops::Range};
+use std::{array, error::Error, ops::Range};
 
 pub const BYTES_PER_PIXEL: usize = 4;
 
@@ -69,29 +69,76 @@ unsafe impl Sync for RenderContext {}
 // Safety: Shmem is only accessed in RenderContext
 unsafe impl Send for RenderContext {}
 
+fn split<const N: usize>(bytes: &[u8], bytecount: usize) -> [&[u8]; N] {
+    array::from_fn::<&[u8], N, _>(|i| &bytes[(i * bytecount)..((i + 1) * bytecount)])
+}
+
+fn split_mut<const N: usize>(bytes: &mut [u8], bytecount: usize) -> [&mut [u8]; N] {
+    let indices =
+        array::from_fn::<std::ops::Range<usize>, N, _>(|i| (i * bytecount)..((i + 1) * bytecount));
+
+    bytes.get_disjoint_mut(indices).unwrap()
+}
+
 impl RenderContext {
+    fn get_bytes(&self) -> &[u8] {
+        unsafe { self.shmem.as_slice() }
+    }
+
+    fn get_bytes_mut(&mut self) -> &mut [u8] {
+        unsafe { self.shmem.as_slice_mut() }
+    }
+
+    pub(super) fn frames<const N: usize>(&self) -> Result<[&[u8]; N], Box<dyn Error>> {
+        if N > self.size.count {
+            return Err("frame number out of range".into());
+        }
+        let bytes = self.get_bytes();
+        let bytecount = self.frame_bytecount();
+        Ok(split(bytes, bytecount))
+    }
+
+    pub(super) fn frames_mut<const N: usize>(&mut self) -> Result<[&mut [u8]; N], Box<dyn Error>> {
+        if N > self.size.count {
+            return Err("frame number out of range".into());
+        }
+        let bytecount = self.frame_bytecount();
+        let bytes = self.get_bytes_mut();
+        Ok(split_mut(bytes, bytecount))
+    }
+
     pub(super) fn frame(&self, frame_num: usize) -> Result<&[u8], Box<dyn Error>> {
         self.check_frame(frame_num)?;
         let range = self.frame_range(frame_num);
-        let bytes = unsafe { self.shmem.as_slice() };
+        let bytes = self.get_bytes();
         Ok(&bytes[range])
-    }
-
-    pub(super) fn frame_mut(&mut self, frame_num: usize) -> Result<&mut [u8], Box<dyn Error>> {
-        self.check_frame(frame_num)?;
-        let range = self.frame_range(frame_num);
-        let bytes = unsafe { self.shmem.as_slice_mut() };
-        Ok(&mut bytes[range])
     }
 
     pub(super) fn rendered_frame_mut(&mut self) -> &mut [u8] {
         let range = self.frame_range(self.size.count);
-        let bytes = unsafe { self.shmem.as_slice_mut() };
+        let bytes = self.get_bytes_mut();
         &mut bytes[range]
     }
 
+    #[allow(clippy::type_complexity)]
+    pub(super) fn frames_with_rendered_frame_mut<const N: usize>(
+        &mut self,
+    ) -> Result<([&[u8]; N], &mut [u8]), Box<dyn Error>> {
+        if N > self.size.count {
+            return Err("frame number out of range".into());
+        }
+        let bytecount = self.frame_bytecount();
+        let bytes = self.get_bytes_mut();
+        let (frames, rendered_frame) = bytes.split_at_mut(bytes.len() - bytecount);
+        Ok((split(frames, bytecount), rendered_frame))
+    }
+
+    fn frame_bytecount(&self) -> usize {
+        (self.size.width * self.size.height) as usize * BYTES_PER_PIXEL
+    }
+
     fn frame_range(&self, frame_num: usize) -> Range<usize> {
-        let frame_size = (self.size.width * self.size.height) as usize * BYTES_PER_PIXEL;
+        let frame_size = self.frame_bytecount();
         let frame_offset = frame_num * frame_size;
         frame_offset..frame_offset + frame_size
     }

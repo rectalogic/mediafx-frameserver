@@ -116,9 +116,7 @@ where
     ) -> Result<(), Box<dyn Error>> {
         let params = self.params(time);
         if let Some(frame_server) = self.frame_server() {
-            frame_server
-                .get_source_frame_mut(0)?
-                .copy_from_slice(slice_to_bytes(inframe));
+            frame_server.get_source_frames_mut::<1>()?[0].copy_from_slice(slice_to_bytes(inframe));
             let rendered_frame = frame_server.render(params)?;
             slice_to_bytes_mut(outframe).copy_from_slice(rendered_frame);
         }
@@ -134,12 +132,9 @@ where
     ) -> Result<(), Box<dyn Error>> {
         let params = self.params(time);
         if let Some(frame_server) = self.frame_server() {
-            frame_server
-                .get_source_frame_mut(0)?
-                .copy_from_slice(slice_to_bytes(inframe1));
-            frame_server
-                .get_source_frame_mut(1)?
-                .copy_from_slice(slice_to_bytes(inframe2));
+            let source_frames = frame_server.get_source_frames_mut::<2>()?;
+            source_frames[0].copy_from_slice(slice_to_bytes(inframe1));
+            source_frames[1].copy_from_slice(slice_to_bytes(inframe2));
             let rendered_frame = frame_server.render(params)?;
             slice_to_bytes_mut(outframe).copy_from_slice(rendered_frame);
         }
@@ -156,15 +151,10 @@ where
     ) -> Result<(), Box<dyn Error>> {
         let params = self.params(time);
         if let Some(frame_server) = self.frame_server() {
-            frame_server
-                .get_source_frame_mut(0)?
-                .copy_from_slice(slice_to_bytes(inframe1));
-            frame_server
-                .get_source_frame_mut(1)?
-                .copy_from_slice(slice_to_bytes(inframe2));
-            frame_server
-                .get_source_frame_mut(2)?
-                .copy_from_slice(slice_to_bytes(inframe3));
+            let source_frames = frame_server.get_source_frames_mut::<3>()?;
+            source_frames[0].copy_from_slice(slice_to_bytes(inframe1));
+            source_frames[1].copy_from_slice(slice_to_bytes(inframe2));
+            source_frames[2].copy_from_slice(slice_to_bytes(inframe3));
             let rendered_frame = frame_server.render(params)?;
             slice_to_bytes_mut(outframe).copy_from_slice(rendered_frame);
         }

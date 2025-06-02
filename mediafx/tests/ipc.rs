@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Andrew Wason
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use std::{env, iter::zip};
+use std::env;
 
 const WIDTH: u32 = 1024;
 const HEIGHT: u32 = 768;
@@ -11,8 +11,9 @@ fn fill_frame(frame: &mut [u8], value: u8) {
 }
 
 fn server_render_frame(frame_server: &mut mediafx::server::MediaFXServer, num: u8) {
-    fill_frame(frame_server.get_source_frame_mut(0).unwrap(), num);
-    fill_frame(frame_server.get_source_frame_mut(1).unwrap(), num + 1);
+    let source_frames = frame_server.get_source_frames_mut::<2>().unwrap();
+    fill_frame(source_frames[0], num);
+    fill_frame(source_frames[1], num + 1);
     let rendered_frame = frame_server.render((0.0, 0.0, 0.0, 0.0)).unwrap();
     let expected_frame = vec![num + num + 1; (WIDTH * HEIGHT * 4) as usize];
     assert_eq!(rendered_frame, &expected_frame);
@@ -30,15 +31,10 @@ fn client_render_frame(
     frame_client: mediafx::client::MediaFXClient,
 ) -> mediafx::client::MediaFXClient {
     let mut request = frame_client.request_render().unwrap();
-    let frame0 = request.get_source_frame(0).unwrap();
-    let frame1 = request.get_source_frame(1).unwrap();
-    let rendered_frame = zip(frame0, frame1)
-        .map(|(frame1, frame2)| frame1 + frame2)
-        .collect::<Vec<u8>>();
-
-    request
-        .get_rendered_frame_mut()
-        .copy_from_slice(&rendered_frame);
+    let (frames, rendered_frame) = request.get_frames_with_rendered_frame_mut::<2>().unwrap();
+    for (i, b) in rendered_frame.iter_mut().enumerate() {
+        *b = frames[0][i] + frames[1][i];
+    }
     request.render_complete().unwrap()
 }
 

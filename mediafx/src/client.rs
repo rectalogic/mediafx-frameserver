@@ -81,8 +81,19 @@ impl RenderRequest {
         self.frame_client.context.frame(frame_num)
     }
 
+    pub fn get_source_frames<const N: usize>(&self) -> Result<[&[u8]; N], Box<dyn Error>> {
+        self.frame_client.context.frames()
+    }
+
     pub fn get_rendered_frame_mut(&mut self) -> &mut [u8] {
         self.frame_client.context.rendered_frame_mut()
+    }
+
+    #[allow(clippy::type_complexity)]
+    pub fn get_frames_with_rendered_frame_mut<const N: usize>(
+        &mut self,
+    ) -> Result<([&[u8]; N], &mut [u8]), Box<dyn Error>> {
+        self.frame_client.context.frames_with_rendered_frame_mut()
     }
 
     #[allow(clippy::result_large_err)]
