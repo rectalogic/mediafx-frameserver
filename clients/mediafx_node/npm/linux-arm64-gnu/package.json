@@ -1,20 +1,20 @@
 {
   "name": "@mediafx/client-linux-arm64-gnu",
   "version": "0.0.0",
-  "os": [
-    "linux"
-  ],
   "cpu": [
     "arm64"
   ],
-  "main": "client.linux-arm64-gnu.node",
+  "main": "mediafx.linux-arm64-gnu.node",
   "files": [
-    "client.linux-arm64-gnu.node"
+    "mediafx.linux-arm64-gnu.node"
   ],
-  "license": "MIT",
+  "license": "GPL-3.0-or-later",
   "engines": {
-    "node": ">= 10"
+    "node": ">= 10.16.0 < 11 || >= 11.8.0 < 12 || >= 12.0.0"
   },
+  "os": [
+    "linux"
+  ],
   "libc": [
     "glibc"
   ]

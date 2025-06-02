@@ -1,32 +1,36 @@
 {
   "name": "@mediafx/client",
   "version": "0.0.0",
+  "license": "GPL-3.0-or-later",
+  "engines": {
+    "node": ">= 10.16.0 < 11 || >= 11.8.0 < 12 || >= 12.0.0"
+  },
+  "type": "commonjs",
   "main": "index.js",
   "types": "index.d.ts",
+  "browser": "browser.js",
   "napi": {
-    "name": "mediafx",
-    "triples": {
-      "additional": [
-        "aarch64-apple-darwin",
-        "aarch64-unknown-linux-gnu"
-      ]
-    }
-  },
-  "license": "GPL-3.0-or-later",
-  "devDependencies": {
-    "@napi-rs/cli": "^2.18.4",
-    "@types/node": "^22.15.21"
-  },
-  "engines": {
-    "node": ">= 10"
+    "binaryName": "mediafx",
+    "targets": [
+      "aarch64-apple-darwin",
+      "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-linux-musl",
+      "x86_64-apple-darwin",
+      "x86_64-pc-windows-msvc",
+      "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-linux-musl"
+    ]
   },
   "scripts": {
-    "artifacts": "napi artifacts",
-    "build": "napi build --platform --release",
-    "build:debug": "napi build --platform",
+    "build": "napi build --release --platform --strip",
+    "build:debug": "napi build",
     "prepublishOnly": "napi prepublish -t npm",
-    "universal": "napi universal",
+    "artifacts": "napi artifacts",
     "version": "napi version"
   },
-  "packageManager": "yarn@4.9.1"
+  "devDependencies": {
+    "@napi-rs/cli": "^3.0.0-alpha.86",
+    "@types/node": "^22.15.21"
+  },
+  "packageManager": "yarn@4.9.2"
 }

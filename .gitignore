@@ -5,7 +5,8 @@ clients/mediafx_py/**/.venv/
 clients/mediafx_py/**/*.so
 clients/mediafx_py/**/__pycache__/
 clients/mediafx_node/node_modules/
-clients/mediafx_node/.yarn/
+clients/mediafx_node/.yarn/*
 clients/mediafx_node/*.node
 clients/mediafx_node/index.js
 clients/mediafx_node/index.d.ts
+clients/mediafx_node/.pnp.*
