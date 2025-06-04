@@ -97,10 +97,9 @@ jobs:
       - name: Set version
         shell: bash
         run: |
-          VERSION=$(cargo metadata --format-version 1 --no-deps | jq --raw-output  '.packages | map(select(.name == "mediafx")) | .[0].version')
-          yarn version $VERSION
-          # XXX broken https://github.com/napi-rs/napi-rs/issues/2692
-          # yarn run version
+          CRATE_VERSION=$(../../.github/workflows/get-version.sh mediafx_node)
+          yarn version $CRATE_VERSION
+          yarn run version
       - name: Build
         run: ${{ matrix.settings.build }}
         shell: bash
@@ -121,6 +120,7 @@ jobs:
 
   publish:
     name: Publish
+    environment: release
     runs-on: ubuntu-latest
     needs:
       - build
@@ -150,18 +150,14 @@ jobs:
       - name: List packages
         run: ls -R ./npm
         shell: bash
-      - name: Publish
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+      - name: Get version
+        id: version
         run: |
-          if git log -1 --pretty=%B | grep "^[0-9]\+\.[0-9]\+\.[0-9]\+$";
-          then
-            npm publish --access public --provenance
-          elif git log -1 --pretty=%B | grep "^[0-9]\+\.[0-9]\+\.[0-9]\+";
-          then
-            npm publish --tag next --access public --provenance
-          else
-            echo "Not a release, skipping publish"
-          fi
+          echo "crateversion=$(../../.github/workflows/get-version.sh mediafx_node)" >> "$GITHUB_OUTPUT"
+      - name: Publish
+        if: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name == format("v{0}", steps.version.outputs.crate_version) }}
+        run: |
+          npm publish --access public --provenance
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

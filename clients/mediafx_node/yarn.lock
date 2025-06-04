@@ -262,14 +262,14 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@mediafx/client@workspace:."
   dependencies:
-    "@napi-rs/cli": "npm:^3.0.0-alpha.86"
+    "@napi-rs/cli": "npm:^3.0.0-alpha.87"
     "@types/node": "npm:^22.15.21"
   languageName: unknown
   linkType: soft
 
-"@napi-rs/cli@npm:^3.0.0-alpha.86":
-  version: 3.0.0-alpha.86
-  resolution: "@napi-rs/cli@npm:3.0.0-alpha.86"
+"@napi-rs/cli@npm:^3.0.0-alpha.87":
+  version: 3.0.0-alpha.88
+  resolution: "@napi-rs/cli@npm:3.0.0-alpha.88"
   dependencies:
     "@inquirer/prompts": "npm:^7.4.0"
     "@napi-rs/cross-toolchain": "npm:^0.0.19"
@@ -296,7 +296,7 @@ __metadata:
   bin:
     napi: ./dist/cli.js
     napi-raw: ./cli.mjs
-  checksum: 10c0/d5c3c5a0a8ddeec542fbc5d35f11ae96ab39a208c358ed6e3b00802701d7084a864c6f293f7776353ce2b3ac9a18d6e918e48c2f15e27e108ea9aca54c4e6213
+  checksum: 10c0/3723c5aaef5064a313f5cc0cd0b04cf55c6345fff4b5b5e4669536f35850a498106c200c27522fb0260a76ef34a4dbc10ca564ebf914b59d697958d651a5b25f
   languageName: node
   linkType: hard
 

@@ -6,8 +6,6 @@ on:
   push:
     tags:
       - v**
-    branches:
-      - "*"
   workflow_dispatch:
 
 permissions:
@@ -44,15 +42,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist
-          sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
-          manylinux: auto
-          working-directory: ./clients/mediafx_py
-      - name: Build free-threaded wheels
-        uses: PyO3/maturin-action@v1
-        with:
-          target: ${{ matrix.platform.target }}
-          args: --release --out dist -i python3.13t
+          args: --release --out dist --find-interpreter
           sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
           manylinux: auto
           working-directory: ./clients/mediafx_py
@@ -60,7 +50,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wheels-linux-${{ matrix.platform.target }}
-          path: dist
+          path: ./clients/mediafx_py/dist
+          if-no-files-found: error
 
   musllinux:
     runs-on: ${{ matrix.platform.runner }}
@@ -84,15 +75,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist
-          sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
-          manylinux: musllinux_1_2
-          working-directory: ./clients/mediafx_py
-      - name: Build free-threaded wheels
-        uses: PyO3/maturin-action@v1
-        with:
-          target: ${{ matrix.platform.target }}
-          args: --release --out dist -i python3.13t
+          args: --release --out dist --find-interpreter
           sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
           manylinux: musllinux_1_2
           working-directory: ./clients/mediafx_py
@@ -100,7 +83,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wheels-musllinux-${{ matrix.platform.target }}
-          path: dist
+          path: ./clients/mediafx_py/dist
+          if-no-files-found: error
 
   windows:
     runs-on: ${{ matrix.platform.runner }}
@@ -121,21 +105,15 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist
-          sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
-          working-directory: ./clients/mediafx_py
-      - name: Build free-threaded wheels
-        uses: PyO3/maturin-action@v1
-        with:
-          target: ${{ matrix.platform.target }}
-          args: --release --out dist -i python3.13t
+          args: --release --out dist --find-interpreter
           sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
           working-directory: ./clients/mediafx_py
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
           name: wheels-windows-${{ matrix.platform.target }}
-          path: dist
+          path: ./clients/mediafx_py/dist
+          if-no-files-found: error
 
   macos:
     runs-on: ${{ matrix.platform.runner }}
@@ -155,43 +133,22 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist
-          sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
-          working-directory: ./clients/mediafx_py
-      - name: Build free-threaded wheels
-        uses: PyO3/maturin-action@v1
-        with:
-          target: ${{ matrix.platform.target }}
-          args: --release --out dist -i python3.13t
+          args: --release --out dist --find-interpreter
           sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
           working-directory: ./clients/mediafx_py
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
           name: wheels-macos-${{ matrix.platform.target }}
-          path: dist
-
-  sdist:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build sdist
-        uses: PyO3/maturin-action@v1
-        with:
-          command: sdist
-          args: --out dist
-          working-directory: ./clients/mediafx_py
-      - name: Upload sdist
-        uses: actions/upload-artifact@v4
-        with:
-          name: wheels-sdist
-          path: dist
+          path: ./clients/mediafx_py/dist
+          if-no-files-found: error
 
   release:
     name: Release
+    environment: release
     runs-on: ubuntu-latest
-    if: ${{ startsWith(github.ref, 'refs/tags/') }}
-    needs: [linux, musllinux, windows, macos, sdist]
+    if: ${{ startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' }}
+    needs: [linux, musllinux, windows, macos]
     permissions:
       # Use to sign the release artifacts
       id-token: write
@@ -201,15 +158,17 @@ jobs:
       attestations: write
     steps:
       - uses: actions/download-artifact@v4
+        with:
+          path: ./clients/mediafx_py
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v2
         with:
-          subject-path: "wheels-*/*"
+          subject-path: "./clients/mediafx_py/wheels-*/*"
+      - name: Get version
+        id: version
+        run: |
+          echo "crateversion=$(../../.github/workflows/get-version.sh mediafx_py)" >> "$GITHUB_OUTPUT"
       - name: Publish to PyPI
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
-        uses: PyO3/maturin-action@v1
-        with:
-          command: upload
-          # XXX use uv publish
-          args: --non-interactive --skip-existing wheels-*/*
-          working-directory: ./clients/mediafx_py
+        if: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name == format("v{0}", steps.version.outputs.crate_version) }}
+        run: |
+          uv publish wheels-*/*
