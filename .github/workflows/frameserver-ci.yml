@@ -52,7 +52,7 @@ jobs:
         run: |
           cd clients/mediafx_node
           yarn install
-          yarn build:debug
+          yarn build
       - name: Run tests
         run: uv run --project clients/mediafx_py cargo test --verbose
       - name: Install ffmpeg
