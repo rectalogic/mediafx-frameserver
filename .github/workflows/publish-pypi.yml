@@ -6,8 +6,6 @@ on:
   push:
     tags:
       - v**
-    branches:
-      - "*"
   workflow_dispatch:
 
 permissions:
@@ -164,6 +162,7 @@ jobs:
 
   release:
     name: Release
+    environment: release
     runs-on: ubuntu-latest
     if: ${{ startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' }}
     needs: [linux, musllinux, windows, macos, sdist]
