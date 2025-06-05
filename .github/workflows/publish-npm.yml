@@ -99,8 +99,7 @@ jobs:
         run: |
           CRATE_VERSION=$(../../.github/workflows/get-version.sh mediafx_node)
           yarn version $CRATE_VERSION
-          # XXX broken https://github.com/napi-rs/napi-rs/issues/2692
-          # yarn run version
+          yarn run version
       - name: Build
         run: ${{ matrix.settings.build }}
         shell: bash
