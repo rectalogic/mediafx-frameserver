@@ -3,5 +3,5 @@
 
 pub mod client;
 mod context;
-mod messages;
+mod message;
 pub mod server;

@@ -3,7 +3,7 @@
 
 fn source_frame(frame_client: mediafx::client::MediaFXClient) -> mediafx::client::MediaFXClient {
     let size = frame_client.render_size();
-    let mut request = frame_client.request_render().unwrap();
+    let mut request = frame_client.render_frame().unwrap();
 
     let (_, r, g, b) = *request.render_data();
     let rendered_frame = request.get_rendered_frame_mut();
@@ -17,7 +17,7 @@ fn source_frame(frame_client: mediafx::client::MediaFXClient) -> mediafx::client
         }
     }
 
-    request.render_complete().unwrap()
+    request.commit().unwrap()
 }
 
 fn main() {

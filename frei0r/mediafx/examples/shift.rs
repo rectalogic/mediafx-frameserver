@@ -3,7 +3,7 @@
 
 fn filter_frame(frame_client: mediafx::client::MediaFXClient) -> mediafx::client::MediaFXClient {
     let size = frame_client.render_size();
-    let mut request = frame_client.request_render().unwrap();
+    let mut request = frame_client.render_frame().unwrap();
 
     let (_, xshift, yshift, _) = *request.render_data();
     let xshift = (xshift * size.width() as f64) as u32;
@@ -21,7 +21,7 @@ fn filter_frame(frame_client: mediafx::client::MediaFXClient) -> mediafx::client
         }
     }
 
-    request.render_complete().unwrap()
+    request.commit().unwrap()
 }
 
 fn main() {

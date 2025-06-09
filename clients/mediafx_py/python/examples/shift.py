@@ -12,7 +12,7 @@ def main() -> None:
     frames = [bytearray(client.frame_bytecount)]
 
     while True:
-        (_, xshift, yshift, _) = client.render_begin(frames)
+        (_, xshift, yshift, _) = client.render_frame(frames)
 
         xshift = int(xshift * width)
         yshift = int(yshift * height)
@@ -25,7 +25,7 @@ def main() -> None:
                 for channel in range(0, 4):
                     rendered_frame[dest_index + channel] = frames[0][source_index + channel]
 
-        client.render_finish(rendered_frame)
+        client.render_commit(rendered_frame)
 
 
 if __name__ == "__main__":

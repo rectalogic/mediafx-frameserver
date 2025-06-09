@@ -40,17 +40,15 @@ impl MediaFX {
     }
 
     #[napi]
-    pub fn render_begin(&mut self, frames: Option<Vec<Uint8Array>>) -> napi::Result<[f64; 4]> {
-        let result = self
-            .state
-            .render_begin(frames, |render_request, mut frames| {
-                for (frame_num, frame) in frames.iter_mut().enumerate() {
-                    let source = render_request.get_source_frame(frame_num)?;
-                    check_len(source, &frame)?;
-                    unsafe { frame.as_mut().copy_from_slice(source) };
-                }
-                Ok(())
-            });
+    pub fn render_frame(&mut self, frames: Option<Vec<Uint8Array>>) -> napi::Result<[f64; 4]> {
+        let result = self.state.render_frame(frames, |render_frame, mut frames| {
+            for (frame_num, frame) in frames.iter_mut().enumerate() {
+                let source = render_frame.get_source_frame(frame_num)?;
+                check_len(source, &frame)?;
+                unsafe { frame.as_mut().copy_from_slice(source) };
+            }
+            Ok(())
+        });
         match result {
             Ok(render_data) => Ok(render_data.into()),
             Err(err) => Err(napi::Error::from_reason(err.to_string())),
@@ -58,9 +56,9 @@ impl MediaFX {
     }
 
     #[napi]
-    pub fn render_finish(&mut self, frame: Uint8Array) -> napi::Result<()> {
+    pub fn render_commit(&mut self, frame: Uint8Array) -> napi::Result<()> {
         self.state
-            .render_finish(&frame, |frame, rendered_frame| {
+            .render_commit(&frame, |frame, rendered_frame| {
                 check_len(&rendered_frame, frame)?;
                 rendered_frame.copy_from_slice(frame);
                 Ok(())

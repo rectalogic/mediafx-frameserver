@@ -10,7 +10,7 @@ const renderedFrame = new Uint8Array(client.frameBytecount);
 const frames = [new Uint8Array(client.frameBytecount)];
 
 while (true) {
-  let [, xshift, yshift] = client.renderBegin(frames);
+  let [, xshift, yshift] = client.renderFrame(frames);
 
   xshift = Math.floor(xshift * width);
   yshift = Math.floor(yshift * height);
@@ -26,5 +26,5 @@ while (true) {
     }
   }
 
-  client.renderFinish(renderedFrame);
+  client.renderCommit(renderedFrame);
 }

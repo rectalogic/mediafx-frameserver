@@ -41,12 +41,12 @@ impl MediaFX {
     }
 
     #[pyo3(signature = (frames=None))]
-    fn render_begin(&mut self, frames: Option<&Bound<PySequence>>) -> PyResult<RenderData> {
-        let render_result = self.state.render_begin(frames, |render_request, frames| {
+    fn render_frame(&mut self, frames: Option<&Bound<PySequence>>) -> PyResult<RenderData> {
+        let render_result = self.state.render_frame(frames, |render_frame, frames| {
             Python::with_gil(|py| -> Result<(), Box<dyn Error>> {
                 for (frame_num, buffer) in frames.try_iter()?.enumerate() {
                     let frame: PyBuffer<u8> = PyBuffer::get(&buffer?)?;
-                    let source = render_request.get_source_frame(frame_num)?;
+                    let source = render_frame.get_source_frame(frame_num)?;
                     frame.copy_from_slice(py, source)?;
                 }
                 Ok(())
@@ -61,8 +61,8 @@ impl MediaFX {
         }
     }
 
-    fn render_finish(&mut self, frame: PyBuffer<u8>) -> PyResult<()> {
-        let render_result = self.state.render_finish(frame, |frame, rendered_frame| {
+    fn render_commit(&mut self, frame: PyBuffer<u8>) -> PyResult<()> {
+        let render_result = self.state.render_commit(frame, |frame, rendered_frame| {
             Python::with_gil(|py| -> Result<(), Box<dyn Error>> {
                 frame.copy_to_slice(py, rendered_frame)?;
                 Ok(())

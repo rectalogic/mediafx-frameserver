@@ -30,12 +30,12 @@ fn frame_server(client_path: &str) {
 fn client_render_frame(
     frame_client: mediafx::client::MediaFXClient,
 ) -> mediafx::client::MediaFXClient {
-    let mut request = frame_client.request_render().unwrap();
+    let mut request = frame_client.render_frame().unwrap();
     let (frames, rendered_frame) = request.get_frames_with_rendered_frame_mut::<2>().unwrap();
     for (i, b) in rendered_frame.iter_mut().enumerate() {
         *b = frames[0][i] + frames[1][i];
     }
-    request.render_complete().unwrap()
+    request.commit().unwrap()
 }
 
 fn frame_client() {

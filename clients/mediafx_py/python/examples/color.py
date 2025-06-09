@@ -13,14 +13,14 @@ def main() -> None:
     rendered_frame = bytearray(client.frame_bytecount)
 
     while True:
-        (_, r, g, b) = client.render_begin()
+        (_, r, g, b) = client.render_frame()
         r = int(r * 255)
         g = int(g * 255)
         b = int(b * 255)
         pixel = struct.pack("=4B", r, g, b, 255)
         for outpixel in range(0, len(rendered_frame), 4):
             rendered_frame[outpixel : outpixel + 4] = pixel
-        client.render_finish(rendered_frame)
+        client.render_commit(rendered_frame)
 
 
 if __name__ == "__main__":

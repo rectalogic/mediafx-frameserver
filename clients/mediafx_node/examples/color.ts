@@ -9,7 +9,7 @@ const client = new MediaFX();
 const renderedFrame = new Uint8Array(client.frameBytecount);
 
 while (true) {
-  let [, r, g, b] = client.renderBegin();
+  let [, r, g, b] = client.renderFrame();
   r = Math.floor(r * 255);
   g = Math.floor(g * 255);
   b = Math.floor(b * 255);
@@ -19,5 +19,5 @@ while (true) {
     renderedFrame[offset + 2] = b;
     renderedFrame[offset + 3] = 255;
   }
-  client.renderFinish(renderedFrame);
+  client.renderCommit(renderedFrame);
 }

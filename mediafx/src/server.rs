@@ -6,12 +6,9 @@ use std::{
     process::{Child, ChildStdin, ChildStdout, Command, Stdio},
 };
 
-pub use crate::messages::RenderData;
-use crate::{
-    context::{RenderContext, RenderSize},
-    messages::{RenderAck, RenderFrame, RenderInitialize, receive_message, send_message},
-};
-
+use crate::context::{RenderContext, RenderSize};
+use crate::message;
+pub use message::RenderData;
 use shared_memory::ShmemConf;
 
 pub struct MediaFXServer {
@@ -45,12 +42,12 @@ impl MediaFXServer {
             .ok_or("frame client stdout is not available")?;
         let shmem = ShmemConf::new().size(size.memory_size()).create()?;
         let render_initialize =
-            RenderInitialize::new(size, shmem.get_os_id().into(), config.into());
+            message::RenderInitialize::new(size, shmem.get_os_id().into(), config.into());
         let context = RenderContext::new(size, shmem);
 
-        send_message(&render_initialize, &mut client_stdin)?;
+        message::send(&render_initialize, &mut client_stdin)?;
         // XXX check for errors
-        let _response: RenderAck = receive_message(&mut client_stdout)?;
+        let _response: message::RenderAck = message::receive(&mut client_stdout)?;
         Ok(MediaFXServer {
             context,
             client,
@@ -65,17 +62,23 @@ impl MediaFXServer {
         self.context.frames_mut()
     }
 
-    pub fn render(&mut self, render_data: RenderData) -> Result<&mut [u8], Box<dyn Error>> {
-        send_message(RenderFrame::Render(render_data), &mut self.client_stdin)?;
+    pub fn render(
+        &mut self,
+        render_data: message::RenderData,
+    ) -> Result<&mut [u8], Box<dyn Error>> {
+        message::send(
+            message::RenderFrame::Render(render_data),
+            &mut self.client_stdin,
+        )?;
         // XXX check for errors
-        let _response: RenderAck = receive_message(&mut self.client_stdout)?;
+        let _response: message::RenderAck = message::receive(&mut self.client_stdout)?;
         Ok(self.context.rendered_frame_mut())
     }
 }
 
 impl Drop for MediaFXServer {
     fn drop(&mut self) {
-        if send_message(RenderFrame::Terminate, &mut self.client_stdin).is_err() {
+        if message::send(message::RenderFrame::Terminate, &mut self.client_stdin).is_err() {
             let _ = self.client.kill();
         } else {
             let _ = self.client.wait();
