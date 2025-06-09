@@ -6,7 +6,7 @@ license.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-frei0r-rs = { git = "https://github.com/rectalogic/frei0r-rs.git", tag = "1.0.0" }
+frei0r-rs2 = { git = "https://github.com/rectalogic/frei0r-rs.git", tag = "2.0.0" }
 mediafx = { path = "../../mediafx" }
 
 [[example]]
