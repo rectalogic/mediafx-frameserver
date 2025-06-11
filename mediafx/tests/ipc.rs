@@ -1,6 +1,7 @@
 // Copyright (C) 2025 Andrew Wason
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+use mediafx::client::Metadata;
 use std::env;
 
 const WIDTH: u32 = 1024;

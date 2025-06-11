@@ -3,8 +3,8 @@
 
 use std::error::Error;
 
-pub use mediafx::client::RenderData;
-use mediafx::client::{BYTES_PER_PIXEL, FrameClient, RenderFrame, RenderSize};
+use mediafx::client::{BYTES_PER_PIXEL, FrameClient, RenderFrame};
+pub use mediafx::client::{Metadata, RenderData};
 
 enum State {
     FrameClient(FrameClient),
@@ -39,34 +39,30 @@ impl ClientState {
         }
     }
 
-    pub fn config(&self) -> &str {
+    fn metadata(&self) -> &dyn Metadata {
         match self.state {
-            Some(State::FrameClient(ref client)) => client.config(),
-            Some(State::RenderFrame(ref render_frame)) => render_frame.config(),
+            Some(State::FrameClient(ref client)) => client,
+            Some(State::RenderFrame(ref render_frame)) => render_frame,
             None => unreachable!("Invalid state"),
         }
     }
 
-    fn render_size(&self) -> RenderSize {
-        match self.state {
-            Some(State::FrameClient(ref client)) => client.render_size(),
-            Some(State::RenderFrame(ref render_frame)) => render_frame.render_size(),
-            None => unreachable!("Invalid state"),
-        }
+    pub fn config(&self) -> &str {
+        self.metadata().config()
     }
 
     pub fn frame_bytecount(&self) -> usize {
-        let size = self.render_size();
+        let size = self.metadata().render_size();
         (size.width() * size.height()) as usize * BYTES_PER_PIXEL
     }
 
     pub fn frame_size(&self) -> (u32, u32) {
-        let size = self.render_size();
+        let size = self.metadata().render_size();
         (size.width(), size.height())
     }
 
     pub fn frame_count(&self) -> usize {
-        self.render_size().count()
+        self.metadata().render_size().count()
     }
 
     #[allow(clippy::result_large_err)]

@@ -1,6 +1,8 @@
 // Copyright (C) 2025 Andrew Wason
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+use mediafx::client::Metadata;
+
 fn source_frame(frame_client: mediafx::client::FrameClient) -> mediafx::client::FrameClient {
     let size = frame_client.render_size();
     let mut request = frame_client.render_frame().unwrap();

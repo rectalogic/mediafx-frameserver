@@ -37,14 +37,6 @@ impl FrameClient {
         })
     }
 
-    pub fn config(&self) -> &str {
-        &self.config
-    }
-
-    pub fn render_size(&self) -> RenderSize {
-        self.context.render_size()
-    }
-
     #[allow(clippy::result_large_err)]
     pub fn render_frame(mut self) -> Result<RenderFrame, (Self, Box<dyn Error>)> {
         match message::receive(&mut self.stdin) {
@@ -67,14 +59,6 @@ pub struct RenderFrame {
 impl RenderFrame {
     pub fn render_data(&self) -> &message::RenderData {
         &self.render_data
-    }
-
-    pub fn config(&self) -> &str {
-        &self.client.config
-    }
-
-    pub fn render_size(&self) -> RenderSize {
-        self.client.context.render_size()
     }
 
     pub fn get_source_frame(&self, frame_num: usize) -> Result<&[u8], Box<dyn Error>> {
@@ -102,5 +86,30 @@ impl RenderFrame {
             Ok(_) => Ok(self.client),
             Err(err) => Err((self, err)),
         }
+    }
+}
+
+pub trait Metadata {
+    fn config(&self) -> &str;
+    fn render_size(&self) -> RenderSize;
+}
+
+impl Metadata for FrameClient {
+    fn config(&self) -> &str {
+        &self.config
+    }
+
+    fn render_size(&self) -> RenderSize {
+        self.context.render_size()
+    }
+}
+
+impl Metadata for RenderFrame {
+    fn config(&self) -> &str {
+        &self.client.config
+    }
+
+    fn render_size(&self) -> RenderSize {
+        self.client.context.render_size()
     }
 }
