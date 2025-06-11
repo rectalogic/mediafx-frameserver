@@ -11,14 +11,14 @@ use crate::message;
 pub use message::RenderData;
 use shared_memory::ShmemConf;
 
-pub struct MediaFXServer {
+pub struct FrameServer {
     context: RenderContext,
     client: Child,
     client_stdin: ChildStdin,
     client_stdout: ChildStdout,
 }
 
-impl MediaFXServer {
+impl FrameServer {
     pub fn new<C: Into<String>>(
         client_path: &str,
         config: C,
@@ -48,7 +48,7 @@ impl MediaFXServer {
         message::send(&render_initialize, &mut client_stdin)?;
         // XXX check for errors
         let _response: message::RenderAck = message::receive(&mut client_stdout)?;
-        Ok(MediaFXServer {
+        Ok(FrameServer {
             context,
             client,
             client_stdin,
@@ -76,7 +76,7 @@ impl MediaFXServer {
     }
 }
 
-impl Drop for MediaFXServer {
+impl Drop for FrameServer {
     fn drop(&mut self) {
         if message::send(message::RenderFrame::Terminate, &mut self.client_stdin).is_err() {
             let _ = self.client.kill();

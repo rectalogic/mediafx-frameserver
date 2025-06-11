@@ -11,14 +11,14 @@ use crate::message;
 pub use message::RenderData;
 
 #[derive(Debug)]
-pub struct MediaFXClient {
+pub struct FrameClient {
     stdin: std::io::Stdin,
     stdout: std::io::Stdout,
     context: RenderContext,
     config: String,
 }
 
-impl MediaFXClient {
+impl FrameClient {
     pub fn new() -> Result<Self, Box<dyn Error>> {
         let mut stdin = std::io::stdin();
         let mut stdout = std::io::stdout();
@@ -29,7 +29,7 @@ impl MediaFXClient {
         message::send(message::RenderAck::default(), &mut stdout)?;
         let context = RenderContext::new(*render_initialize.size(), shmem);
 
-        Ok(MediaFXClient {
+        Ok(FrameClient {
             stdin,
             stdout,
             context,
@@ -60,7 +60,7 @@ impl MediaFXClient {
 
 #[derive(Debug)]
 pub struct RenderFrame {
-    client: MediaFXClient,
+    client: FrameClient,
     render_data: message::RenderData,
 }
 
@@ -97,7 +97,7 @@ impl RenderFrame {
     }
 
     #[allow(clippy::result_large_err)]
-    pub fn commit(mut self) -> Result<MediaFXClient, (Self, Box<dyn Error>)> {
+    pub fn commit(mut self) -> Result<FrameClient, (Self, Box<dyn Error>)> {
         match message::send(message::RenderAck::default(), &mut self.client.stdout) {
             Ok(_) => Ok(self.client),
             Err(err) => Err((self, err)),

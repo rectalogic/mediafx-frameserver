@@ -10,7 +10,7 @@ fn fill_frame(frame: &mut [u8], value: u8) {
     frame.fill(value);
 }
 
-fn server_render_frame(frame_server: &mut mediafx::server::MediaFXServer, num: u8) {
+fn server_render_frame(frame_server: &mut mediafx::server::FrameServer, num: u8) {
     let source_frames = frame_server.get_source_frames_mut::<2>().unwrap();
     fill_frame(source_frames[0], num);
     fill_frame(source_frames[1], num + 1);
@@ -21,15 +21,13 @@ fn server_render_frame(frame_server: &mut mediafx::server::MediaFXServer, num: u
 
 fn frame_server(client_path: &str) {
     let mut frame_server =
-        mediafx::server::MediaFXServer::new(client_path, "config", WIDTH, HEIGHT, 2).unwrap();
+        mediafx::server::FrameServer::new(client_path, "config", WIDTH, HEIGHT, 2).unwrap();
     for num in 1..10 {
         server_render_frame(&mut frame_server, num);
     }
 }
 
-fn client_render_frame(
-    frame_client: mediafx::client::MediaFXClient,
-) -> mediafx::client::MediaFXClient {
+fn client_render_frame(frame_client: mediafx::client::FrameClient) -> mediafx::client::FrameClient {
     let mut request = frame_client.render_frame().unwrap();
     let (frames, rendered_frame) = request.get_frames_with_rendered_frame_mut::<2>().unwrap();
     for (i, b) in rendered_frame.iter_mut().enumerate() {
@@ -39,7 +37,7 @@ fn client_render_frame(
 }
 
 fn frame_client() {
-    let mut frame_client = mediafx::client::MediaFXClient::new().unwrap();
+    let mut frame_client = mediafx::client::FrameClient::new().unwrap();
     assert_eq!(frame_client.config(), "config");
     loop {
         frame_client = client_render_frame(frame_client);

@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Andrew Wason
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-fn filter_frame(frame_client: mediafx::client::MediaFXClient) -> mediafx::client::MediaFXClient {
+fn filter_frame(frame_client: mediafx::client::FrameClient) -> mediafx::client::FrameClient {
     let size = frame_client.render_size();
     let mut request = frame_client.render_frame().unwrap();
 
@@ -25,7 +25,7 @@ fn filter_frame(frame_client: mediafx::client::MediaFXClient) -> mediafx::client
 }
 
 fn main() {
-    let mut frame_client = mediafx::client::MediaFXClient::new().unwrap();
+    let mut frame_client = mediafx::client::FrameClient::new().unwrap();
     loop {
         frame_client = filter_frame(frame_client);
     }

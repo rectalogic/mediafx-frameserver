@@ -4,10 +4,10 @@
 use std::error::Error;
 
 pub use mediafx::client::RenderData;
-use mediafx::client::{BYTES_PER_PIXEL, MediaFXClient, RenderFrame, RenderSize};
+use mediafx::client::{BYTES_PER_PIXEL, FrameClient, RenderFrame, RenderSize};
 
 enum State {
-    Client(MediaFXClient),
+    FrameClient(FrameClient),
     RenderFrame(RenderFrame),
 }
 
@@ -18,7 +18,7 @@ pub struct ClientState {
 impl ClientState {
     pub fn new() -> Result<Self, Box<dyn Error>> {
         Ok(Self {
-            state: Some(State::Client(MediaFXClient::new()?)),
+            state: Some(State::FrameClient(FrameClient::new()?)),
         })
     }
 
@@ -41,7 +41,7 @@ impl ClientState {
 
     pub fn config(&self) -> &str {
         match self.state {
-            Some(State::Client(ref client)) => client.config(),
+            Some(State::FrameClient(ref client)) => client.config(),
             Some(State::RenderFrame(ref render_frame)) => render_frame.config(),
             None => unreachable!("Invalid state"),
         }
@@ -49,7 +49,7 @@ impl ClientState {
 
     fn render_size(&self) -> RenderSize {
         match self.state {
-            Some(State::Client(ref client)) => client.render_size(),
+            Some(State::FrameClient(ref client)) => client.render_size(),
             Some(State::RenderFrame(ref render_frame)) => render_frame.render_size(),
             None => unreachable!("Invalid state"),
         }
@@ -80,9 +80,9 @@ impl ClientState {
     {
         self.with_state(|state| {
             let render_frame = match state {
-                State::Client(client) => client
+                State::FrameClient(client) => client
                     .render_frame()
-                    .map_err(|(client, err)| (State::Client(client), err))?,
+                    .map_err(|(client, err)| (State::FrameClient(client), err))?,
                 State::RenderFrame(render_frame) => render_frame,
             };
 
@@ -111,12 +111,12 @@ impl ClientState {
                     return Err((State::RenderFrame(render_frame), err));
                 }
                 match render_frame.commit() {
-                    Ok(client) => Ok((State::Client(client), ())),
+                    Ok(client) => Ok((State::FrameClient(client), ())),
                     Err((render_frame, err)) => Err((State::RenderFrame(render_frame), err)),
                 }
             }
-            State::Client(client) => Err((
-                State::Client(client),
+            State::FrameClient(client) => Err((
+                State::FrameClient(client),
                 "Cannot commit in current state".into(),
             )),
         })
