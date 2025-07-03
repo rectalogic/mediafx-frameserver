@@ -1,0 +1,55 @@
+name: Publish frei0r Release
+
+on:
+  push:
+    tags:
+      - v**
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build distribution package
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rustup
+        run: |
+          rustup update stable
+      - name: Build
+        shell: bash
+        run: |
+          cargo build --release --verbose --package mediafx_source --package mediafx_filter --package mediafx_mixer2 --package mediafx_mixer3
+          # ffmpeg on macOS incorrectly expects .dylib not .so
+          if [ "$RUNNER_OS" == "macOS" ]; then
+            ln -s mediafx_source.so target/release/mediafx_source.dylib
+            ln -s mediafx_filter.so target/release/mediafx_filter.dylib
+            ln -s mediafx_mixer2.so target/release/mediafx_mixer2.dylib
+            ln -s mediafx_mixer3.so target/release/mediafx_mixer3.dylib
+          fi
+          shopt -s extglob
+          cd target/release/
+          tar -czvf ../../mediafx-frei0r-${{ runner.os }}.tar.gz mediafx_*.${{ runner.os == 'Windows' && 'dll' || '@(so|dylib)' }}
+      - name: Get version
+        id: version
+        run: |
+          echo "crate=$(../../.github/workflows/get-version.sh mediafx_frei0r)" >> "$GITHUB_OUTPUT"
+      - name: Upload Release Assets
+        if: ${{ github.event_name != 'workflow_dispatch' && github.ref_name == format('v{0}', steps.version.outputs.crate) }}
+        uses: softprops/action-gh-release@v1
+        with:
+          files: "*.tar.gz"
+      - name: Upload Artifacts
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: mediafx-frei0r-${{ runner.os }}
+          path: "*.tar.gz"

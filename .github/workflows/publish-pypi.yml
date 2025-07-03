@@ -167,8 +167,8 @@ jobs:
       - name: Get version
         id: version
         run: |
-          echo "crateversion=$(../../.github/workflows/get-version.sh mediafx_py)" >> "$GITHUB_OUTPUT"
+          echo "crate=$(../../.github/workflows/get-version.sh mediafx_py)" >> "$GITHUB_OUTPUT"
       - name: Publish to PyPI
-        if: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name == format('v{0}', steps.version.outputs.crate_version) }}
+        if: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name == format('v{0}', steps.version.outputs.crate) }}
         run: |
           uv publish wheels-*/*
