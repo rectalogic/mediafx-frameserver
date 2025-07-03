@@ -75,7 +75,7 @@ where
     let source_len = source.as_ref().len();
     let dest_len = dest.as_ref().len();
     if source_len != dest_len {
-        return Err(format!("Frame lengths do not match, {} != {}", source_len, dest_len).into());
+        return Err(format!("Frame lengths do not match, {source_len} != {dest_len}").into());
     }
     Ok(())
 }

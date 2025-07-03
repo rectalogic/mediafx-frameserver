@@ -60,16 +60,16 @@ where
                 let client_path = match self.client_path.to_str() {
                     Ok(client_path) => client_path,
                     Err(e) => {
-                        debug_assert!(false, "Failed to parse client_path: {}", e);
-                        eprintln!("Failed to parse client_path: {}", e);
+                        debug_assert!(false, "Failed to parse client_path: {e}");
+                        eprintln!("Failed to parse client_path: {e}");
                         return None;
                     }
                 };
                 let client_config = match self.config.to_str() {
                     Ok(client_config) => client_config,
                     Err(e) => {
-                        debug_assert!(false, "Failed to parse client_config: {}", e);
-                        eprintln!("Failed to parse client_config: {}", e);
+                        debug_assert!(false, "Failed to parse client_config: {e}");
+                        eprintln!("Failed to parse client_config: {e}");
                         return None;
                     }
                 };
@@ -85,8 +85,8 @@ where
                         self.frame_server.as_mut()
                     }
                     Err(e) => {
-                        debug_assert!(false, "Failed to create frame server: {}", e);
-                        eprintln!("Failed to create frame server: {}", e);
+                        debug_assert!(false, "Failed to create frame server: {e}");
+                        eprintln!("Failed to create frame server: {e}");
                         None
                     }
                 }
@@ -261,8 +261,8 @@ impl frei0r_rs2::FilterPlugin for FrameServerPlugin<frei0r_rs2::KindFilter> {
     fn update_filter(&mut self, time: f64, inframe: &[u32], outframe: &mut [u32]) {
         let time = self.time_scale * time;
         if let Err(e) = self.filter(time, inframe, outframe) {
-            debug_assert!(false, "Failed to filter frame: {}", e);
-            eprintln!("Failed to filter frame: {}", e);
+            debug_assert!(false, "Failed to filter frame: {e}");
+            eprintln!("Failed to filter frame: {e}");
             self.frame_server.take();
         }
     }
@@ -272,8 +272,8 @@ impl frei0r_rs2::SourcePlugin for FrameServerPlugin<frei0r_rs2::KindSource> {
     fn update_source(&mut self, time: f64, outframe: &mut [u32]) {
         let time = self.time_scale * time;
         if let Err(e) = self.source(time, outframe) {
-            debug_assert!(false, "Failed to source frame: {}", e);
-            eprintln!("Failed to source frame: {}", e);
+            debug_assert!(false, "Failed to source frame: {e}");
+            eprintln!("Failed to source frame: {e}");
             self.frame_server.take();
         }
     }
@@ -289,8 +289,8 @@ impl frei0r_rs2::Mixer2Plugin for FrameServerPlugin<frei0r_rs2::KindMixer2> {
     ) {
         let time = self.time_scale * time;
         if let Err(e) = self.mixer2(time, inframe1, inframe2, outframe) {
-            debug_assert!(false, "Failed to mixer2 frame: {}", e);
-            eprintln!("Failed to mixer2 frame: {}", e);
+            debug_assert!(false, "Failed to mixer2 frame: {e}");
+            eprintln!("Failed to mixer2 frame: {e}");
             self.frame_server.take();
         }
     }
@@ -307,8 +307,8 @@ impl frei0r_rs2::Mixer3Plugin for FrameServerPlugin<frei0r_rs2::KindMixer3> {
     ) {
         let time = self.time_scale * time;
         if let Err(e) = self.mixer3(time, inframe1, inframe2, inframe3, outframe) {
-            debug_assert!(false, "Failed to mixer3 frame: {}", e);
-            eprintln!("Failed to mixer3 frame: {}", e);
+            debug_assert!(false, "Failed to mixer3 frame: {e}");
+            eprintln!("Failed to mixer3 frame: {e}");
             self.frame_server.take();
         }
     }
