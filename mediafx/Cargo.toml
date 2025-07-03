@@ -1,5 +1,6 @@
 [package]
 name = "mediafx"
+description = "MediaFX frameserver client and server APIs"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

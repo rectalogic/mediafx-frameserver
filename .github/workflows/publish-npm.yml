@@ -126,6 +126,9 @@ jobs:
       - build
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Required by "yarn version" https://yarnpkg.com/features/release-workflow
+          fetch-depth: 0
       - name: Setup node
         uses: actions/setup-node@v4
         # Skip corepack check and enable manually

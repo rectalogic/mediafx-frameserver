@@ -109,7 +109,7 @@ dependencies = [
 
 [[package]]
 name = "client_state"
-version = "0.1.2-a3"
+version = "0.1.2-a4"
 dependencies = [
  "mediafx",
 ]
@@ -277,7 +277,7 @@ checksum = "13dc2df351e3202783a1fe0d44375f7295ffb4049267b0f3018346dc122a1d94"
 
 [[package]]
 name = "mediafx"
-version = "0.1.2-a3"
+version = "0.1.2-a4"
 dependencies = [
  "bincode",
  "shared_memory",
@@ -285,14 +285,14 @@ dependencies = [
 
 [[package]]
 name = "mediafx_filter"
-version = "0.1.2-a3"
+version = "0.1.2-a4"
 dependencies = [
  "mediafx_frei0r",
 ]
 
 [[package]]
 name = "mediafx_frei0r"
-version = "0.1.2-a3"
+version = "0.1.2-a4"
 dependencies = [
  "frei0r-rs2",
  "mediafx",
@@ -300,21 +300,21 @@ dependencies = [
 
 [[package]]
 name = "mediafx_mixer2"
-version = "0.1.2-a3"
+version = "0.1.2-a4"
 dependencies = [
  "mediafx_frei0r",
 ]
 
 [[package]]
 name = "mediafx_mixer3"
-version = "0.1.2-a3"
+version = "0.1.2-a4"
 dependencies = [
  "mediafx_frei0r",
 ]
 
 [[package]]
 name = "mediafx_node"
-version = "0.1.2-a3"
+version = "0.1.2-a4"
 dependencies = [
  "client_state",
  "napi",
@@ -324,7 +324,7 @@ dependencies = [
 
 [[package]]
 name = "mediafx_py"
-version = "0.1.2-a3"
+version = "0.1.2-a4"
 dependencies = [
  "client_state",
  "pyo3",
@@ -332,7 +332,7 @@ dependencies = [
 
 [[package]]
 name = "mediafx_source"
-version = "0.1.2-a3"
+version = "0.1.2-a4"
 dependencies = [
  "mediafx_frei0r",
 ]
