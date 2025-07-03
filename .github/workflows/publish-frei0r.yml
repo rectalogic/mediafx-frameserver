@@ -40,6 +40,7 @@ jobs:
           tar -czvf ../../mediafx-frei0r-${{ runner.os }}.tar.gz mediafx_*.${{ runner.os == 'Windows' && 'dll' || '@(so|dylib)' }}
       - name: Get version
         id: version
+        shell: bash
         run: |
           echo "crate=$(../../.github/workflows/get-version.sh mediafx_frei0r)" >> "$GITHUB_OUTPUT"
       - name: Upload Release Assets

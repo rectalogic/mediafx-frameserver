@@ -1,6 +1,7 @@
 {
   "name": "@mediafx/client-darwin-x64",
   "version": "0.0.0",
+  "repository": "github:rectalogic/mediafx-frameserver",
   "cpu": [
     "x64"
   ],
