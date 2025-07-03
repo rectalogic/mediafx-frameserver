@@ -97,7 +97,7 @@ jobs:
       - name: Set version
         shell: bash
         run: |
-          CRATE_VERSION=$(../../.github/workflows/get-version.sh mediafx_node)
+          CRATE_VERSION=$(.github/workflows/get-version.sh mediafx_node)
           yarn version $CRATE_VERSION
           yarn run version
       - name: Build
@@ -154,7 +154,7 @@ jobs:
         id: version
         shell: bash
         run: |
-          echo "crate=$(../../.github/workflows/get-version.sh mediafx_node)" >> "$GITHUB_OUTPUT"
+          echo "crate=$(.github/workflows/get-version.sh mediafx_node)" >> "$GITHUB_OUTPUT"
       - name: Set version
         shell: bash
         run: |

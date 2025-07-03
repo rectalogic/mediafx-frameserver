@@ -42,7 +42,7 @@ jobs:
         id: version
         shell: bash
         run: |
-          echo "crate=$(../../.github/workflows/get-version.sh mediafx_frei0r)" >> "$GITHUB_OUTPUT"
+          echo "crate=$(.github/workflows/get-version.sh mediafx_frei0r)" >> "$GITHUB_OUTPUT"
       - name: Upload Release Assets
         if: ${{ github.event_name != 'workflow_dispatch' && github.ref_name == format('v{0}', steps.version.outputs.crate) }}
         uses: softprops/action-gh-release@v1
