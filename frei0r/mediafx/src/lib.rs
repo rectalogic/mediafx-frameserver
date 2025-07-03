@@ -12,6 +12,7 @@ use mediafx::server::RenderData;
 
 pub struct FrameServerPlugin<K: frei0r_rs2::PluginKind> {
     client_path: CString,
+    time_scale: f64,
     config: CString,
     param1: f64,
     param2: f64,
@@ -33,6 +34,7 @@ where
             width,
             height,
             client_path: c"".to_owned(),
+            time_scale: 1.0,
             config: c"".to_owned(),
             param1: 0.,
             param2: 0.,
@@ -207,6 +209,12 @@ where
             |plugin| plugin.client_path.as_c_str(),
             |plugin, value| plugin.client_path = value.to_owned(),
         ),
+        frei0r_rs2::ParamInfo::new_double(
+            c"time_scale",
+            c"frei0r time scale multiplier",
+            |plugin| plugin.time_scale,
+            |plugin, value| plugin.time_scale = value,
+        ),
         frei0r_rs2::ParamInfo::new_string(
             c"config",
             c"Frameserver client configuration data",
@@ -251,6 +259,7 @@ where
 
 impl frei0r_rs2::FilterPlugin for FrameServerPlugin<frei0r_rs2::KindFilter> {
     fn update_filter(&mut self, time: f64, inframe: &[u32], outframe: &mut [u32]) {
+        let time = self.time_scale * time;
         if let Err(e) = self.filter(time, inframe, outframe) {
             debug_assert!(false, "Failed to filter frame: {}", e);
             eprintln!("Failed to filter frame: {}", e);
@@ -261,6 +270,7 @@ impl frei0r_rs2::FilterPlugin for FrameServerPlugin<frei0r_rs2::KindFilter> {
 
 impl frei0r_rs2::SourcePlugin for FrameServerPlugin<frei0r_rs2::KindSource> {
     fn update_source(&mut self, time: f64, outframe: &mut [u32]) {
+        let time = self.time_scale * time;
         if let Err(e) = self.source(time, outframe) {
             debug_assert!(false, "Failed to source frame: {}", e);
             eprintln!("Failed to source frame: {}", e);
@@ -277,6 +287,7 @@ impl frei0r_rs2::Mixer2Plugin for FrameServerPlugin<frei0r_rs2::KindMixer2> {
         inframe2: &[u32],
         outframe: &mut [u32],
     ) {
+        let time = self.time_scale * time;
         if let Err(e) = self.mixer2(time, inframe1, inframe2, outframe) {
             debug_assert!(false, "Failed to mixer2 frame: {}", e);
             eprintln!("Failed to mixer2 frame: {}", e);
@@ -294,6 +305,7 @@ impl frei0r_rs2::Mixer3Plugin for FrameServerPlugin<frei0r_rs2::KindMixer3> {
         inframe3: &[u32],
         outframe: &mut [u32],
     ) {
+        let time = self.time_scale * time;
         if let Err(e) = self.mixer3(time, inframe1, inframe2, inframe3, outframe) {
             debug_assert!(false, "Failed to mixer3 frame: {}", e);
             eprintln!("Failed to mixer3 frame: {}", e);
