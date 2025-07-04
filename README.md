@@ -9,6 +9,21 @@ using pipes and shared memory.
 Source video frames are sent to the client which can apply visual effects
 and return the modified frame.
 
+# Usage
+
+Download the frei0r plugins for your platform ![GitHub Release](https://img.shields.io/github/v/release/rectalogic/mediafx-frameserver)
+
+Install the client library for
+Rust ![Crates.io Version](https://img.shields.io/crates/v/mediafx),
+NodeJS ![NPM Version](https://img.shields.io/npm/v/%40mediafx%2Fclient),
+or Python ![PyPI - Version](https://img.shields.io/pypi/v/mediafx).
+
+See example plugin clients for [Rust](frei0r/mediafx/examples), [NodeJS](clients/mediafx_node/examples) and [Python](clients/mediafx_py/python/examples).
+
+See the [GitHub actions workflow](.github/workflows/frameserver-ci.yml) for examples of using the clients with FFmpeg and MLT.
+
+# Diagram
+
 ```mermaid
 graph TB
     subgraph "frei0r Host Application"
