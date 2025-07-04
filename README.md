@@ -11,12 +11,12 @@ and return the modified frame.
 
 # Usage
 
-Download the frei0r plugins for your platform ![GitHub Release](https://img.shields.io/github/v/release/rectalogic/mediafx-frameserver)
+Download the frei0r plugins for your platform [![GitHub Release](https://img.shields.io/github/v/release/rectalogic/mediafx-frameserver)](https://github.com/rectalogic/mediafx-frameserver/releases/).
 
 Install the client library for
-Rust ![Crates.io Version](https://img.shields.io/crates/v/mediafx),
-NodeJS ![NPM Version](https://img.shields.io/npm/v/%40mediafx%2Fclient),
-or Python ![PyPI - Version](https://img.shields.io/pypi/v/mediafx).
+Rust [![Crates.io Version](https://img.shields.io/crates/v/mediafx)](https://crates.io/crates/mediafx),
+NodeJS [![NPM Version](https://img.shields.io/npm/v/%40mediafx%2Fclient)](https://www.npmjs.com/package/@mediafx/client),
+or Python [![PyPI - Version](https://img.shields.io/pypi/v/mediafx)](https://pypi.org/project/mediafx/).
 
 See example plugin clients for [Rust](frei0r/mediafx/examples), [NodeJS](clients/mediafx_node/examples) and [Python](clients/mediafx_py/python/examples).
 
