@@ -9,7 +9,7 @@ using pipes and shared memory.
 Source video frames are sent to the client which can apply visual effects
 and return the modified frame.
 
-# Usage
+## Usage
 
 Download the frei0r plugins for your platform [![GitHub Release](https://img.shields.io/github/v/release/rectalogic/mediafx-frameserver)](https://github.com/rectalogic/mediafx-frameserver/releases/).
 
@@ -22,7 +22,7 @@ See example plugin clients for [Rust](frei0r/mediafx/examples), [NodeJS](clients
 
 See the [GitHub actions workflow](.github/workflows/frameserver-ci.yml) for examples of using the clients with FFmpeg and MLT.
 
-# Diagram
+## Diagram
 
 ```mermaid
 graph TB
